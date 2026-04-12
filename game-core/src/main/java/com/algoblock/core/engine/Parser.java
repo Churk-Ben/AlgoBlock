@@ -54,13 +54,14 @@ public class Parser {
             expect(Token.Type.GT);
         }
         if (args.size() != arity) {
-            throw new ParseException("Arity mismatch for " + current.text() + ", expect " + arity + " but got " + args.size());
+            throw new ParseException(
+                    "Arity mismatch for " + current.text() + ", expect " + arity + " but got " + args.size());
         }
         wire(block, args);
         return block;
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings("unchecked")
     private void wire(Block<?> block, List<Block<?>> args) {
         if (block instanceof UnaryBlock unary && args.size() == 1) {
             unary.setChild(args.get(0));

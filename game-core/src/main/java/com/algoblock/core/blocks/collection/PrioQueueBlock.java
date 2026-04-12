@@ -10,7 +10,7 @@ import java.util.List;
 
 @BlockMeta(name = "PrioQueue", signature = "Collection<T> -> List<T>", description = "最小堆顺序输出", arity = 1)
 public class PrioQueueBlock extends UnaryBlock<Object, List<?>> {
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public List<?> evaluate(EvalContext ctx) {
         ctx.consumeStep();

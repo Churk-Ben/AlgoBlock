@@ -19,11 +19,16 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class BlocksTest {
+    @SuppressWarnings("unchecked")
+    private static Block<Object> block(Block<?> value) {
+        return (Block<Object>) value;
+    }
+
     @Test
     void stackShouldReverse() {
         InputBlock input = new InputBlock();
         StackBlock stack = new StackBlock();
-        stack.setChild((Block) input);
+        stack.setChild(block(input));
         assertEquals(List.of(3, 2, 1), stack.evaluate(new EvalContext(List.of(1, 2, 3), 100)));
     }
 
@@ -31,7 +36,7 @@ class BlocksTest {
     void prioQueueShouldSort() {
         InputBlock input = new InputBlock();
         PrioQueueBlock block = new PrioQueueBlock();
-        block.setChild((Block) input);
+        block.setChild(block(input));
         assertEquals(List.of(1, 2, 3), block.evaluate(new EvalContext(List.of(2, 1, 3), 100)));
     }
 
@@ -39,12 +44,12 @@ class BlocksTest {
     void mapAndFilterShouldWork() {
         InputBlock input = new InputBlock();
         MapBlock map = new MapBlock();
-        map.setLeft((Block) input);
-        map.setRight((Block) new DoubleOpBlock());
+        map.setLeft(block(input));
+        map.setRight(block(new DoubleOpBlock()));
 
         FilterBlock filter = new FilterBlock();
-        filter.setLeft((Block) map);
-        filter.setRight((Block) new EvenPredBlock());
+        filter.setLeft(block(map));
+        filter.setRight(block(new EvenPredBlock()));
 
         assertEquals(List.of(2, 4, 6), filter.evaluate(new EvalContext(List.of(1, 2, 3), 1000)));
     }
@@ -53,11 +58,11 @@ class BlocksTest {
     void zipAndFlatShouldWork() {
         InputBlock input = new InputBlock();
         ZipBlock zip = new ZipBlock();
-        zip.setLeft((Block) input);
-        zip.setRight((Block) new com.algoblock.core.blocks.fn.ConstIntBlock(2));
+        zip.setLeft(block(input));
+        zip.setRight(block(new com.algoblock.core.blocks.fn.ConstIntBlock(2)));
 
         FlatBlock flat = new FlatBlock();
-        flat.setChild((Block) zip);
+        flat.setChild(block(zip));
 
         assertEquals(List.of(1, 2, 3, 4), flat.evaluate(new EvalContext(List.of(1, 2, 3, 4), 1000)));
     }
@@ -66,9 +71,9 @@ class BlocksTest {
     void arrayAndReverseShouldWork() {
         InputBlock input = new InputBlock();
         ArrayBlock array = new ArrayBlock();
-        array.setChild((Block) input);
+        array.setChild(block(input));
         ReverseBlock reverse = new ReverseBlock();
-        reverse.setChild((Block) array);
+        reverse.setChild(block(array));
         assertEquals(List.of(4, 3, 2, 1), reverse.evaluate(new EvalContext(List.of(1, 2, 3, 4), 100)));
     }
 }

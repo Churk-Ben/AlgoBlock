@@ -36,7 +36,7 @@ public class Lexer {
                 tokens.add(new Token(Token.Type.NUMBER, input.substring(start, i)));
                 continue;
             }
-            if (Character.isLetter(c) || c == '_' ) {
+            if (Character.isLetter(c) || c == '_') {
                 int start = i;
                 while (i < input.length()) {
                     char cc = input.charAt(i);

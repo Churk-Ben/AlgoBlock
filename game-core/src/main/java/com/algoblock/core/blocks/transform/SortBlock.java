@@ -10,7 +10,7 @@ import java.util.List;
 
 @BlockMeta(name = "Sort", signature = "Collection<T> -> List<T>", description = "自然序排序", arity = 1)
 public class SortBlock extends UnaryBlock<Object, List<?>> {
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
     public List<?> evaluate(EvalContext ctx) {
         ctx.consumeStep();

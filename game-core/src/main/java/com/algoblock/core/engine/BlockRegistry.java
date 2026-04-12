@@ -81,8 +81,8 @@ public class BlockRegistry {
 
     public Collection<BlockMeta> allMeta() {
         return map.values().stream()
-            .map(c -> c.getAnnotation(BlockMeta.class))
-            .filter(Objects::nonNull)
-            .toList();
+                .map(c -> c.getAnnotation(BlockMeta.class))
+                .filter(Objects::nonNull)
+                .toList();
     }
 }
