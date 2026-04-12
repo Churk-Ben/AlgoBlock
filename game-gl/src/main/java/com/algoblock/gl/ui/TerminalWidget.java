@@ -29,6 +29,7 @@ public class TerminalWidget {
         this.completer = new Completer(registry);
         this.service = new GameCoreService(registry);
         this.level = level;
+        refresh();
     }
 
     public void setLevel(Level level) {

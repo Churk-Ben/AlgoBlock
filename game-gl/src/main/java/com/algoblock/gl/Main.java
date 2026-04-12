@@ -11,6 +11,7 @@ import static org.lwjgl.glfw.GLFW.glfwCreateWindow;
 import static org.lwjgl.glfw.GLFW.glfwDefaultWindowHints;
 import static org.lwjgl.glfw.GLFW.glfwDestroyWindow;
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
+import static org.lwjgl.glfw.GLFW.glfwGetFramebufferSize;
 import static org.lwjgl.glfw.GLFW.glfwInit;
 import static org.lwjgl.glfw.GLFW.glfwMakeContextCurrent;
 import static org.lwjgl.glfw.GLFW.glfwPollEvents;
@@ -33,8 +34,13 @@ import com.algoblock.gl.input.CharEvent;
 import com.algoblock.gl.input.InputEvent;
 import com.algoblock.gl.input.InputEventQueue;
 import com.algoblock.gl.input.KeyEvent;
+import com.algoblock.gl.renderer.FontAtlas;
 import com.algoblock.gl.renderer.TerminalBuffer;
+import com.algoblock.gl.renderer.TextRenderer;
 import com.algoblock.gl.ui.TerminalWidget;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import org.lwjgl.system.MemoryStack;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
 
@@ -60,6 +66,8 @@ public class Main {
         TerminalBuffer buffer = new TerminalBuffer(120, 40);
         BlockRegistry registry = new BlockRegistry();
         TerminalWidget widget = new TerminalWidget(buffer, registry, level1);
+        FontAtlas fontAtlas = new FontAtlas(resolveFontPath(), 18, 1024, 1024);
+        TextRenderer textRenderer = new TextRenderer(fontAtlas);
         InputEventQueue eventQueue = new InputEventQueue();
 
         glfwSetCharCallback(window, (w, codepoint) -> eventQueue.offer(new CharEvent((char) codepoint)));
@@ -85,10 +93,17 @@ public class Main {
         logicThread.setDaemon(true);
         logicThread.start();
 
-        widget.onEvent(new CharEvent(' '));
         while (!glfwWindowShouldClose(window)) {
+            try (MemoryStack stack = MemoryStack.stackPush()) {
+                var w = stack.mallocInt(1);
+                var h = stack.mallocInt(1);
+                glfwGetFramebufferSize(window, w, h);
+                textRenderer.setViewport(w.get(0), h.get(0));
+            }
             glClearColor(0.05f, 0.07f, 0.09f, 1f);
             glClear(GL_COLOR_BUFFER_BIT);
+            textRenderer.upload(buffer);
+            textRenderer.draw();
             glfwSetWindowTitle(window, "AlgoBlock  t=" + String.format("%.1f", glfwGetTime()));
             glfwSwapBuffers(window);
             glfwPollEvents();
@@ -96,5 +111,17 @@ public class Main {
 
         glfwDestroyWindow(window);
         glfwTerminate();
+    }
+
+    private static String resolveFontPath() {
+        Path p1 = Path.of("assets/fonts/Hack Regular Nerd Font Complete Mono.ttf");
+        if (Files.exists(p1)) {
+            return p1.toString();
+        }
+        Path p2 = Path.of("../assets/fonts/Hack Regular Nerd Font Complete Mono.ttf");
+        if (Files.exists(p2)) {
+            return p2.toString();
+        }
+        throw new IllegalStateException("Hack font not found in assets/fonts");
     }
 }
