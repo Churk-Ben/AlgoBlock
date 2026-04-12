@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": 3,
+  "title": "等价的路",
+  "story": "使用栈语义也能得到排序效果。",
+  "input": [1, 2, 3, 4, 5],
+  "output": [5, 4, 3, 2, 1],
+  "available_blocks": ["Array", "Stack", "PopEach", "Reverse", "_INPUT_"],
+  "forced_blocks": ["Stack"],
+  "bonus_combos": [["Stack", "PopEach"]],
+  "optimal_size": 4,
+  "time_par": 35,
+  "step_budget": 50000,
+  "discovery_hint": "LIFO 天生会倒序。"
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": 1,
+  "title": "Hello Sort",
+  "story": "用最基础的排序完成第一关。",
+  "input": [5, 2, 4, 3, 1],
+  "output": [1, 2, 3, 4, 5],
+  "available_blocks": ["Array", "Sort", "_INPUT_"],
+  "forced_blocks": ["Sort"],
+  "bonus_combos": [["Array", "Sort"]],
+  "optimal_size": 3,
+  "time_par": 30,
+  "step_budget": 50000,
+  "discovery_hint": "Sort 可以直接改变整体顺序。"
+}

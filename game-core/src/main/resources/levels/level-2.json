@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": 2,
+  "title": "堆的秘密",
+  "story": "没有 Sort 时，试试优先队列。",
+  "input": [5, 2, 4, 3, 1],
+  "output": [1, 2, 3, 4, 5],
+  "available_blocks": ["Array", "PrioQueue", "PopEach", "_INPUT_"],
+  "forced_blocks": ["PrioQueue", "PopEach"],
+  "bonus_combos": [["PrioQueue", "PopEach"]],
+  "optimal_size": 4,
+  "time_par": 35,
+  "step_budget": 50000,
+  "discovery_hint": "最小堆每次弹出的是当前最小值。"
+}
