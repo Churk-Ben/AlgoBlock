@@ -1,7 +1,7 @@
 package com.algoblock.gl.renderer;
 
+import static org.lwjgl.opengl.GL11.GL_ALPHA;
 import static org.lwjgl.opengl.GL11.GL_LINEAR;
-import static org.lwjgl.opengl.GL11.GL_RED;
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_MAG_FILTER;
 import static org.lwjgl.opengl.GL11.GL_TEXTURE_MIN_FILTER;
@@ -16,7 +16,6 @@ import static org.lwjgl.opengl.GL11.glTexImage2D;
 import static org.lwjgl.opengl.GL11.glTexParameteri;
 import static org.lwjgl.opengl.GL11.glTexSubImage2D;
 import static org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE;
-import static org.lwjgl.opengl.GL30.GL_R8;
 import static org.lwjgl.stb.STBTruetype.stbtt_FreeBitmap;
 import static org.lwjgl.stb.STBTruetype.stbtt_GetCodepointBitmap;
 import static org.lwjgl.stb.STBTruetype.stbtt_GetCodepointHMetrics;
@@ -106,7 +105,8 @@ public class FontAtlas {
         this.textureId = glGenTextures();
         glBindTexture(GL_TEXTURE_2D, textureId);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, atlasWidth, atlasHeight, 0, GL_RED, GL_UNSIGNED_BYTE, (ByteBuffer) null);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, atlasWidth, atlasHeight, 0, GL_ALPHA, GL_UNSIGNED_BYTE,
+                (ByteBuffer) null);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -197,23 +197,39 @@ public class FontAtlas {
         int yOffset;
         int advance;
         try (MemoryStack stack = MemoryStack.stackPush()) {
-            var w = stack.mallocInt(1);
-            var h = stack.mallocInt(1);
-            var xo = stack.mallocInt(1);
-            var yo = stack.mallocInt(1);
+            var ix0 = stack.mallocInt(1);
+            var iy0 = stack.mallocInt(1);
+            var ix1 = stack.mallocInt(1);
+            var iy1 = stack.mallocInt(1);
             var adv = stack.mallocInt(1);
             var lsb = stack.mallocInt(1);
-            stbtt_GetCodepointBitmapBox(fontInfo, codePoint, scale, scale, xo, yo, w, h);
+            stbtt_GetCodepointBitmapBox(fontInfo, codePoint, scale, scale, ix0, iy0, ix1, iy1);
             stbtt_GetCodepointHMetrics(fontInfo, codePoint, adv, lsb);
-            glyphW = Math.max(0, w.get(0));
-            glyphH = Math.max(0, h.get(0));
-            xOffset = xo.get(0);
-            yOffset = yo.get(0);
+            xOffset = ix0.get(0);
+            yOffset = iy0.get(0);
+            glyphW = Math.max(0, ix1.get(0) - xOffset);
+            glyphH = Math.max(0, iy1.get(0) - yOffset);
             advance = adv.get(0);
         }
 
         float advancePx = Math.max(0f, advance * scale);
+        int[] bitmapW = new int[1];
+        int[] bitmapH = new int[1];
+        int[] bitmapXOffset = new int[1];
+        int[] bitmapYOffset = new int[1];
+        ByteBuffer bitmap = stbtt_GetCodepointBitmap(fontInfo, scale, scale, codePoint, bitmapW, bitmapH, bitmapXOffset,
+                bitmapYOffset);
+        if (bitmap == null) {
+            GlyphInfo info = new GlyphInfo(codePoint, 0f, 0f, 0f, 0f, 0, 0, xOffset, yOffset, advancePx);
+            glyphCache.put(codePoint, info);
+            return info;
+        }
+        glyphW = Math.max(0, bitmapW[0]);
+        glyphH = Math.max(0, bitmapH[0]);
+        xOffset = bitmapXOffset[0];
+        yOffset = bitmapYOffset[0];
         if (glyphW == 0 || glyphH == 0) {
+            stbtt_FreeBitmap(bitmap, 0L);
             GlyphInfo info = new GlyphInfo(codePoint, 0f, 0f, 0f, 0f, 0, 0, xOffset, yOffset, advancePx);
             glyphCache.put(codePoint, info);
             return info;
@@ -225,20 +241,9 @@ public class FontAtlas {
         penX += glyphW + 1;
         rowHeight = Math.max(rowHeight, glyphH + 1);
 
-        int[] w = new int[1];
-        int[] h = new int[1];
-        int[] xo = new int[1];
-        int[] yo = new int[1];
-        ByteBuffer bitmap = stbtt_GetCodepointBitmap(fontInfo, scale, scale, codePoint, w, h, xo, yo);
-        if (bitmap == null) {
-            GlyphInfo info = new GlyphInfo(codePoint, 0f, 0f, 0f, 0f, 0, 0, xOffset, yOffset, advancePx);
-            glyphCache.put(codePoint, info);
-            return info;
-        }
-
         glBindTexture(GL_TEXTURE_2D, textureId);
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, glyphW, glyphH, GL_RED, GL_UNSIGNED_BYTE, bitmap);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, glyphW, glyphH, GL_ALPHA, GL_UNSIGNED_BYTE, bitmap);
         glBindTexture(GL_TEXTURE_2D, 0);
         stbtt_FreeBitmap(bitmap, 0L);
 
@@ -258,7 +263,8 @@ public class FontAtlas {
             rowHeight = 0;
         }
         if (penY + glyphH + 1 > atlasHeight) {
-            throw new IllegalStateException("font atlas is full while inserting code point: U+" + Integer.toHexString(codePoint));
+            throw new IllegalStateException(
+                    "font atlas is full while inserting code point: U+" + Integer.toHexString(codePoint));
         }
     }
 }

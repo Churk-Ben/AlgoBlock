@@ -1,21 +1,42 @@
 package com.algoblock.gl.renderer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
 class DisplayTestPatternTest {
     @Test
-    void shouldRenderCheckerboardAtStart() {
+    void shouldRenderChineseCheckerboardAtStart() {
         TerminalBuffer buffer = new TerminalBuffer(4, 2);
         DisplayTestPattern pattern = new DisplayTestPattern();
 
         pattern.renderTo(buffer, 0.2);
 
-        assertEquals(0x111111, buffer.cells()[0].bg());
-        assertEquals(0x222222, buffer.cells()[1].bg());
-        assertEquals(0x222222, buffer.cells()[4].bg());
-        assertEquals(0x111111, buffer.cells()[5].bg());
+        assertEquals('中', buffer.cells()[0].c());
+        assertEquals('文', buffer.cells()[1].c());
+        assertEquals(0x101418, buffer.cells()[0].bg());
+        assertEquals(0xD9DEE3, buffer.cells()[1].bg());
+    }
+
+    @Test
+    void shouldRotateAllCheckerboardVariants() {
+        TerminalBuffer buffer = new TerminalBuffer(2, 1);
+        DisplayTestPattern pattern = new DisplayTestPattern();
+
+        pattern.renderTo(buffer, 1.2);
+        assertEquals('A', buffer.cells()[0].c());
+        assertEquals('B', buffer.cells()[1].c());
+
+        pattern.renderTo(buffer, 2.2);
+        assertEquals(0xD9DEE3, buffer.cells()[0].bg());
+        assertEquals(0x101418, buffer.cells()[1].bg());
+        assertEquals('文', buffer.cells()[0].c());
+        assertEquals('中', buffer.cells()[1].c());
+
+        pattern.renderTo(buffer, 3.2);
+        assertEquals('B', buffer.cells()[0].c());
+        assertEquals('A', buffer.cells()[1].c());
     }
 
     @Test
@@ -23,34 +44,35 @@ class DisplayTestPatternTest {
         TerminalBuffer buffer = new TerminalBuffer(3, 2);
         DisplayTestPattern pattern = new DisplayTestPattern();
 
-        pattern.renderTo(buffer, 1.7);
+        pattern.renderTo(buffer, 4.2);
         for (TerminalBuffer.Cell cell : buffer.cells()) {
             assertEquals(0xFF0000, cell.bg());
         }
 
-        pattern.renderTo(buffer, 3.4);
+        pattern.renderTo(buffer, 5.7);
         for (TerminalBuffer.Cell cell : buffer.cells()) {
             assertEquals(0x00FF00, cell.bg());
         }
     }
 
     @Test
-    void shouldRenderRollingPhaseWithSingleActiveAndTrailingCells() {
+    void shouldRenderRollingPhaseWithSmoothTail() {
         TerminalBuffer buffer = new TerminalBuffer(5, 2);
         DisplayTestPattern pattern = new DisplayTestPattern();
 
-        pattern.renderTo(buffer, 5.2);
+        pattern.renderTo(buffer, 7.1);
 
         int red = 0;
-        int green = 0;
+        int highlighted = 0;
         for (TerminalBuffer.Cell cell : buffer.cells()) {
             if (cell.bg() == 0xFF0000) {
                 red++;
-            } else if (cell.bg() == 0x00FF00) {
-                green++;
+            }
+            if (cell.bg() != 0x1C2833) {
+                highlighted++;
             }
         }
         assertEquals(1, red);
-        assertEquals(1, green);
+        assertTrue(highlighted > 1);
     }
 }

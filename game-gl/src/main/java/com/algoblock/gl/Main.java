@@ -109,7 +109,14 @@ public class Main {
                 var w = stack.mallocInt(1);
                 var h = stack.mallocInt(1);
                 glfwGetFramebufferSize(window, w, h);
-                textRenderer.setViewport(w.get(0), h.get(0));
+                int viewportW = w.get(0);
+                int viewportH = h.get(0);
+                textRenderer.setViewport(viewportW, viewportH);
+                int dynamicCols = textRenderer.visibleCols();
+                int dynamicRows = textRenderer.visibleRows();
+                if (displayTestBuffer.cols() != dynamicCols || displayTestBuffer.rows() != dynamicRows) {
+                    displayTestBuffer = new TerminalBuffer(dynamicCols, dynamicRows);
+                }
             }
             glClearColor(0.05f, 0.07f, 0.09f, 1f);
             glClear(GL_COLOR_BUFFER_BIT);

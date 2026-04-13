@@ -39,6 +39,14 @@ public class TextRenderer {
         viewportHeight = Math.max(1, height);
     }
 
+    public int visibleCols() {
+        return Math.max(1, (int) Math.floor(viewportWidth / cellWidthPx()));
+    }
+
+    public int visibleRows() {
+        return Math.max(1, (int) Math.floor(viewportHeight / cellHeightPx()));
+    }
+
     public void upload(TerminalBuffer buffer) {
         glViewport(0, 0, viewportWidth, viewportHeight);
         glMatrixMode(GL_PROJECTION);
@@ -50,10 +58,10 @@ public class TextRenderer {
         TerminalBuffer.Cell[] cells = buffer.cells();
         int cols = buffer.cols();
         int rows = buffer.rows();
-        float marginX = 16f;
-        float marginY = 16f;
-        float cellHeight = Math.max(10f, fontAtlas.lineHeightPx() + 6f);
-        float cellWidth = Math.max(8f, fontAtlas.cjkAdvancePx() + 4f);
+        float marginX = 0f;
+        float marginY = 0f;
+        float cellHeight = cellHeightPx();
+        float cellWidth = cellWidthPx();
         float halfCellWidth = cellWidth * 0.5f;
         float baselineBias = Math.max(0f, (cellHeight - fontAtlas.lineHeightPx()) * 0.5f);
 
@@ -125,6 +133,14 @@ public class TextRenderer {
     }
 
     public void draw() {
+    }
+
+    private float cellHeightPx() {
+        return Math.max(10f, fontAtlas.lineHeightPx() + 4f);
+    }
+
+    private float cellWidthPx() {
+        return Math.max(8f, fontAtlas.cjkAdvancePx() + 2f);
     }
 
     private static boolean isWideCodePoint(int codePoint) {
