@@ -19,7 +19,14 @@ public class SortBlock extends UnaryBlock<Object, List<?>> {
             return List.of(value);
         }
         List list = new ArrayList<>(collection);
-        list.sort(Comparator.naturalOrder());
+        if (!list.isEmpty() && !(list.get(0) instanceof Comparable)) {
+            throw new RuntimeException("Sort requires Comparable elements, but got " + list.get(0).getClass().getSimpleName());
+        }
+        try {
+            list.sort(Comparator.naturalOrder());
+        } catch (ClassCastException e) {
+            throw new RuntimeException("Sort requires mutually Comparable elements");
+        }
         return list;
     }
 }
