@@ -66,7 +66,7 @@ public class Main {
         TerminalBuffer buffer = new TerminalBuffer(120, 40);
         BlockRegistry registry = new BlockRegistry();
         TerminalWidget widget = new TerminalWidget(buffer, registry, level1);
-        FontAtlas fontAtlas = new FontAtlas(resolveFontPath(), 18, 1024, 1024);
+        FontAtlas fontAtlas = new FontAtlas(resolveFontPath(), 24, 1024, 1024);
         TextRenderer textRenderer = new TextRenderer(fontAtlas);
         InputEventQueue eventQueue = new InputEventQueue();
 
@@ -114,14 +114,14 @@ public class Main {
     }
 
     private static String resolveFontPath() {
-        Path p1 = Path.of("assets/fonts/Hack Regular Nerd Font Complete Mono.ttf");
+        Path p1 = Path.of("assets/fonts/MapleMono-NF-CN-unhinted/MapleMono-NF-CN-Regular.ttf");
         if (Files.exists(p1)) {
             return p1.toString();
         }
-        Path p2 = Path.of("../assets/fonts/Hack Regular Nerd Font Complete Mono.ttf");
+        Path p2 = Path.of("../assets/fonts/MapleMono-NF-CN-unhinted/MapleMono-NF-CN-Regular.ttf");
         if (Files.exists(p2)) {
             return p2.toString();
         }
-        throw new IllegalStateException("Hack font not found in assets/fonts");
+        throw new IllegalStateException("MapleMono-NF-CN font not found in assets/fonts");
     }
 }
