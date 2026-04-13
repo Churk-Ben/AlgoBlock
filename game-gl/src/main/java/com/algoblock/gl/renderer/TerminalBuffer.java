@@ -3,7 +3,8 @@ package com.algoblock.gl.renderer;
 import java.util.Arrays;
 
 public class TerminalBuffer {
-    public record Cell(char c, int fg, int bg) {}
+    public record Cell(char c, int fg, int bg) {
+    }
 
     private final int cols;
     private final int rows;
@@ -32,9 +33,27 @@ public class TerminalBuffer {
     }
 
     public void print(int col, int row, String text, int fg, int bg) {
+        int cursor = col;
         for (int i = 0; i < text.length(); i++) {
-            set(col + i, row, text.charAt(i), fg, bg);
+            char c = text.charAt(i);
+            set(cursor, row, c, fg, bg);
+            cursor++;
+            // If the character is wide (CJK), it occupies 2 cells. We place a placeholder in the next cell.
+            if (isWideCodePoint(c)) {
+                set(cursor, row, '\0', fg, bg);
+                cursor++;
+            }
         }
+    }
+
+    private static boolean isWideCodePoint(int codePoint) {
+        return (codePoint >= 0x1100 && codePoint <= 0x115F)
+                || (codePoint >= 0x2E80 && codePoint <= 0xA4CF)
+                || (codePoint >= 0xAC00 && codePoint <= 0xD7A3)
+                || (codePoint >= 0xF900 && codePoint <= 0xFAFF)
+                || (codePoint >= 0xFE10 && codePoint <= 0xFE6F)
+                || (codePoint >= 0xFF00 && codePoint <= 0xFF60)
+                || (codePoint >= 0xFFE0 && codePoint <= 0xFFE6);
     }
 
     public void clear() {

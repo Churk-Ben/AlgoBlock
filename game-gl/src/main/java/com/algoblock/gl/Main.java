@@ -2,6 +2,8 @@ package com.algoblock.gl;
 
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_BACKSPACE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_F2;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_F3;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_TAB;
 import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
 import static org.lwjgl.glfw.GLFW.GLFW_RELEASE;
@@ -34,12 +36,15 @@ import com.algoblock.gl.input.CharEvent;
 import com.algoblock.gl.input.InputEvent;
 import com.algoblock.gl.input.InputEventQueue;
 import com.algoblock.gl.input.KeyEvent;
+import com.algoblock.gl.renderer.DisplayTestPattern;
 import com.algoblock.gl.renderer.FontAtlas;
 import com.algoblock.gl.renderer.TerminalBuffer;
 import com.algoblock.gl.renderer.TextRenderer;
 import com.algoblock.gl.ui.TerminalWidget;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
@@ -63,16 +68,36 @@ public class Main {
 
         LevelLoader levelLoader = new LevelLoader();
         Level level1 = levelLoader.loadFromResource("/levels/level-1.json");
-        TerminalBuffer buffer = new TerminalBuffer(120, 40);
+        TerminalBuffer uiBuffer = new TerminalBuffer(120, 40);
+        TerminalBuffer displayTestBuffer = new TerminalBuffer(120, 40);
+        TerminalBuffer fontDiagBuffer = new TerminalBuffer(120, 40);
         BlockRegistry registry = new BlockRegistry();
-        TerminalWidget widget = new TerminalWidget(buffer, registry, level1);
+        TerminalWidget widget = new TerminalWidget(uiBuffer, registry, level1);
+        DisplayTestPattern displayTestPattern = new DisplayTestPattern();
+        AtomicBoolean displayTestMode = new AtomicBoolean(hasDisplayTestArg(args));
+        AtomicBoolean fontDiagMode = new AtomicBoolean(hasFontDiagArg(args));
         FontAtlas fontAtlas = new FontAtlas(resolveFontPath(), 24, 1024, 1024);
         TextRenderer textRenderer = new TextRenderer(fontAtlas);
+        textRenderer.setFontDiagnosticMode(fontDiagMode.get());
         InputEventQueue eventQueue = new InputEventQueue();
+
+        if (fontDiagMode.get()) {
+            System.out.println("[FONT-DIAG] enabled by --font-diag");
+        }
 
         glfwSetCharCallback(window, (w, codepoint) -> eventQueue.offer(new CharEvent((char) codepoint)));
         glfwSetKeyCallback(window, (w, key, scancode, action, mods) -> {
             if (action == GLFW_PRESS || action == GLFW_RELEASE) {
+                if (key == GLFW_KEY_F2 && action == GLFW_PRESS) {
+                    displayTestMode.set(!displayTestMode.get());
+                    return;
+                }
+                if (key == GLFW_KEY_F3 && action == GLFW_PRESS) {
+                    fontDiagMode.set(!fontDiagMode.get());
+                    textRenderer.setFontDiagnosticMode(fontDiagMode.get());
+                    System.out.println("[FONT-DIAG] mode=" + (fontDiagMode.get() ? "ON" : "OFF"));
+                    return;
+                }
                 if (key == GLFW_KEY_ENTER || key == GLFW_KEY_BACKSPACE || key == GLFW_KEY_TAB) {
                     eventQueue.offer(new KeyEvent(key, action, mods));
                 }
@@ -98,11 +123,31 @@ public class Main {
                 var w = stack.mallocInt(1);
                 var h = stack.mallocInt(1);
                 glfwGetFramebufferSize(window, w, h);
-                textRenderer.setViewport(w.get(0), h.get(0));
+                int viewportW = w.get(0);
+                int viewportH = h.get(0);
+                textRenderer.setViewport(viewportW, viewportH);
+                int dynamicCols = textRenderer.visibleCols();
+                int dynamicRows = textRenderer.visibleRows();
+                if (displayTestBuffer.cols() != dynamicCols || displayTestBuffer.rows() != dynamicRows) {
+                    displayTestBuffer = new TerminalBuffer(dynamicCols, dynamicRows);
+                }
+                if (fontDiagBuffer.cols() != dynamicCols || fontDiagBuffer.rows() != dynamicRows) {
+                    fontDiagBuffer = new TerminalBuffer(dynamicCols, dynamicRows);
+                }
             }
             glClearColor(0.05f, 0.07f, 0.09f, 1f);
             glClear(GL_COLOR_BUFFER_BIT);
-            textRenderer.upload(buffer);
+            TerminalBuffer renderBuffer;
+            if (displayTestMode.get()) {
+                displayTestPattern.renderTo(displayTestBuffer, glfwGetTime());
+                renderBuffer = displayTestBuffer;
+            } else if (fontDiagMode.get()) {
+                renderFontDiagnostic(fontDiagBuffer, glfwGetTime());
+                renderBuffer = fontDiagBuffer;
+            } else {
+                renderBuffer = uiBuffer;
+            }
+            textRenderer.upload(renderBuffer);
             textRenderer.draw();
             glfwSetWindowTitle(window, "AlgoBlock  t=" + String.format("%.1f", glfwGetTime()));
             glfwSwapBuffers(window);
@@ -122,6 +167,64 @@ public class Main {
         if (Files.exists(p2)) {
             return p2.toString();
         }
-        throw new IllegalStateException("MapleMono-NF-CN font not found in assets/fonts");
+        return "fonts/MapleMono-NF-CN-unhinted/MapleMono-NF-CN-Regular.ttf";
+    }
+
+    private static boolean hasDisplayTestArg(String[] args) {
+        return Arrays.stream(args).anyMatch("--display-test"::equalsIgnoreCase);
+    }
+
+    private static boolean hasFontDiagArg(String[] args) {
+        return Arrays.stream(args).anyMatch("--font-diag"::equalsIgnoreCase);
+    }
+
+    private static void renderFontDiagnostic(TerminalBuffer buffer, double timeSeconds) {
+        buffer.clear();
+        int cols = buffer.cols();
+        int rows = buffer.rows();
+        int wave = ((int) (timeSeconds * 2.0)) & 1;
+        int headerBg = wave == 0 ? 0x1E3A5F : 0x304A6E;
+        putLine(buffer, 0, "[FONT-DIAG] F3 toggle | F2 display-test | expect visible glyphs", 0xF8FCFF, headerBg);
+        putLine(buffer, 1, "ASCII: ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789 +-*/=_[]{}", 0xFFD580, 0x1B1F24);
+        putLine(buffer, 2, "latin: MapleMono test -> TheQuickBrownFox_jumps_42", 0x9FE6A0, 0x1B1F24);
+        putLine(buffer, 3, "CJK: 中文测试 汉字宽度 对齐 验证 你好世界", 0x7CC7FF, 0x1B1F24);
+        putLine(buffer, 4, "mix: A中B文C汉D字E  2:1 width visual check", 0xE7B4FF, 0x1B1F24);
+        putLine(buffer, 5, "symbol: <> () {} [] @#%&*!? .,:;|\\/~`", 0xFF9AA2, 0x1B1F24);
+        putLine(buffer, 7, "If only background shows: check stdout [FONT-DIAG] glyph lines.", 0xFFE48A, 0x2A1F1A);
+        for (int row = 8; row < rows; row++) {
+            for (int col = 0; col < cols; col++) {
+                int shade = ((row + col + wave) & 1) == 0 ? 0x11161D : 0x0E1319;
+                buffer.set(col, row, ' ', 0xFFFFFF, shade);
+            }
+        }
+    }
+
+    private static void putLine(TerminalBuffer buffer, int row, String text, int fg, int bg) {
+        if (row < 0 || row >= buffer.rows()) {
+            return;
+        }
+        int cursor = 0;
+        for (int i = 0; i < text.length() && cursor < buffer.cols(); i++) {
+            char c = text.charAt(i);
+            buffer.set(cursor, row, c, fg, bg);
+            cursor++;
+            if (isWideCodePoint(c) && cursor < buffer.cols()) {
+                buffer.set(cursor, row, '\0', fg, bg);
+                cursor++;
+            }
+        }
+        for (int i = cursor; i < buffer.cols(); i++) {
+            buffer.set(i, row, ' ', fg, bg);
+        }
+    }
+
+    private static boolean isWideCodePoint(int codePoint) {
+        return (codePoint >= 0x1100 && codePoint <= 0x115F)
+                || (codePoint >= 0x2E80 && codePoint <= 0xA4CF)
+                || (codePoint >= 0xAC00 && codePoint <= 0xD7A3)
+                || (codePoint >= 0xF900 && codePoint <= 0xFAFF)
+                || (codePoint >= 0xFE10 && codePoint <= 0xFE6F)
+                || (codePoint >= 0xFF00 && codePoint <= 0xFF60)
+                || (codePoint >= 0xFFE0 && codePoint <= 0xFFE6);
     }
 }
