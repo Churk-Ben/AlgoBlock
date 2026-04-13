@@ -1,21 +1,131 @@
 package com.algoblock.gl.renderer;
 
+import static org.lwjgl.opengl.GL11.GL_LINEAR;
+import static org.lwjgl.opengl.GL11.GL_RED;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_2D;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_MAG_FILTER;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_MIN_FILTER;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_WRAP_S;
+import static org.lwjgl.opengl.GL11.GL_TEXTURE_WRAP_T;
+import static org.lwjgl.opengl.GL11.GL_UNPACK_ALIGNMENT;
+import static org.lwjgl.opengl.GL11.GL_UNSIGNED_BYTE;
+import static org.lwjgl.opengl.GL11.glBindTexture;
+import static org.lwjgl.opengl.GL11.glGenTextures;
+import static org.lwjgl.opengl.GL11.glPixelStorei;
+import static org.lwjgl.opengl.GL11.glTexImage2D;
+import static org.lwjgl.opengl.GL11.glTexParameteri;
+import static org.lwjgl.opengl.GL11.glTexSubImage2D;
+import static org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE;
+import static org.lwjgl.opengl.GL30.GL_R8;
+import static org.lwjgl.stb.STBTruetype.stbtt_FreeBitmap;
+import static org.lwjgl.stb.STBTruetype.stbtt_GetCodepointBitmap;
+import static org.lwjgl.stb.STBTruetype.stbtt_GetCodepointHMetrics;
+import static org.lwjgl.stb.STBTruetype.stbtt_GetCodepointBitmapBox;
+import static org.lwjgl.stb.STBTruetype.stbtt_GetFontVMetrics;
+import static org.lwjgl.stb.STBTruetype.stbtt_InitFont;
+import static org.lwjgl.stb.STBTruetype.stbtt_ScaleForPixelHeight;
+
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
+import org.lwjgl.BufferUtils;
+import org.lwjgl.stb.STBTTFontinfo;
+import org.lwjgl.system.MemoryStack;
 
 public class FontAtlas {
+    public record GlyphInfo(
+            int codePoint,
+            float u0,
+            float v0,
+            float u1,
+            float v1,
+            int bitmapWidth,
+            int bitmapHeight,
+            int xOffset,
+            int yOffset,
+            float advancePx) {
+        public boolean hasBitmap() {
+            return bitmapWidth > 0 && bitmapHeight > 0;
+        }
+    }
+
     private final String fontPath;
     private final int fontSize;
     private final int atlasWidth;
     private final int atlasHeight;
+    private final STBTTFontinfo fontInfo;
+    private final ByteBuffer fontData;
+    private final float scale;
+    private final float ascentPx;
+    private final float descentPx;
+    private final float lineGapPx;
+    private final float lineHeightPx;
+    private final int textureId;
+    private final int fallbackCodePoint;
+    private final Map<Integer, GlyphInfo> glyphCache = new HashMap<>();
+    private int penX = 1;
+    private int penY = 1;
+    private int rowHeight = 0;
 
     public FontAtlas(String fontPath, int fontSize, int atlasWidth, int atlasHeight) {
         this.fontPath = fontPath;
         this.fontSize = fontSize;
         this.atlasWidth = atlasWidth;
         this.atlasHeight = atlasHeight;
-        if (!Files.exists(Path.of(fontPath))) {
-            throw new IllegalArgumentException("Font not found: " + fontPath);
+        if (fontSize <= 0) {
+            throw new IllegalArgumentException("fontSize must be > 0");
+        }
+        if (atlasWidth <= 0 || atlasHeight <= 0) {
+            throw new IllegalArgumentException("atlas size must be > 0");
+        }
+        Path fontFile = Path.of(fontPath);
+        if (!Files.exists(fontFile)) {
+            throw new IllegalArgumentException("font not found: " + fontPath);
+        }
+        this.fontData = loadFontData(fontFile);
+        this.fontInfo = STBTTFontinfo.create();
+        if (!stbtt_InitFont(fontInfo, fontData)) {
+            throw new IllegalStateException("stbtt_InitFont failed for " + fontPath);
+        }
+        this.scale = stbtt_ScaleForPixelHeight(fontInfo, fontSize);
+
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            var a = stack.mallocInt(1);
+            var d = stack.mallocInt(1);
+            var g = stack.mallocInt(1);
+            stbtt_GetFontVMetrics(fontInfo, a, d, g);
+            this.ascentPx = a.get(0) * scale;
+            this.descentPx = d.get(0) * scale;
+            this.lineGapPx = g.get(0) * scale;
+            this.lineHeightPx = Math.max(1f, (a.get(0) - d.get(0) + g.get(0)) * scale);
+        }
+
+        this.textureId = glGenTextures();
+        glBindTexture(GL_TEXTURE_2D, textureId);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, atlasWidth, atlasHeight, 0, GL_RED, GL_UNSIGNED_BYTE, (ByteBuffer) null);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        GlyphInfo tofu = ensureGlyph('\u25A1');
+        this.fallbackCodePoint = tofu.hasBitmap() || tofu.advancePx() > 0f ? '\u25A1' : '?';
+        ensureGlyph(fallbackCodePoint);
+    }
+
+    private static ByteBuffer loadFontData(Path fontFile) {
+        try {
+            byte[] bytes = Files.readAllBytes(fontFile);
+            ByteBuffer buffer = BufferUtils.createByteBuffer(bytes.length);
+            buffer.put(bytes).flip();
+            return buffer;
+        } catch (IOException e) {
+            throw new IllegalStateException("failed to read font: " + fontFile, e);
         }
     }
 
@@ -33,5 +143,122 @@ public class FontAtlas {
 
     public int atlasHeight() {
         return atlasHeight;
+    }
+
+    public float lineHeightPx() {
+        return lineHeightPx;
+    }
+
+    public float ascentPx() {
+        return ascentPx;
+    }
+
+    public float descentPx() {
+        return descentPx;
+    }
+
+    public float lineGapPx() {
+        return lineGapPx;
+    }
+
+    public int textureId() {
+        return textureId;
+    }
+
+    public void bindTexture() {
+        glBindTexture(GL_TEXTURE_2D, textureId);
+    }
+
+    public GlyphInfo glyphFor(int codePoint) {
+        GlyphInfo glyph = ensureGlyph(codePoint);
+        if (glyph.hasBitmap() || glyph.advancePx() > 0f) {
+            return glyph;
+        }
+        return glyphCache.get(fallbackCodePoint);
+    }
+
+    public float cjkAdvancePx() {
+        GlyphInfo han = glyphFor('\u6C49');
+        if (han != null && han.advancePx() > 0f) {
+            return han.advancePx();
+        }
+        return glyphFor('M').advancePx() * 2f;
+    }
+
+    private GlyphInfo ensureGlyph(int codePoint) {
+        GlyphInfo cached = glyphCache.get(codePoint);
+        if (cached != null) {
+            return cached;
+        }
+
+        int glyphW;
+        int glyphH;
+        int xOffset;
+        int yOffset;
+        int advance;
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            var w = stack.mallocInt(1);
+            var h = stack.mallocInt(1);
+            var xo = stack.mallocInt(1);
+            var yo = stack.mallocInt(1);
+            var adv = stack.mallocInt(1);
+            var lsb = stack.mallocInt(1);
+            stbtt_GetCodepointBitmapBox(fontInfo, codePoint, scale, scale, xo, yo, w, h);
+            stbtt_GetCodepointHMetrics(fontInfo, codePoint, adv, lsb);
+            glyphW = Math.max(0, w.get(0));
+            glyphH = Math.max(0, h.get(0));
+            xOffset = xo.get(0);
+            yOffset = yo.get(0);
+            advance = adv.get(0);
+        }
+
+        float advancePx = Math.max(0f, advance * scale);
+        if (glyphW == 0 || glyphH == 0) {
+            GlyphInfo info = new GlyphInfo(codePoint, 0f, 0f, 0f, 0f, 0, 0, xOffset, yOffset, advancePx);
+            glyphCache.put(codePoint, info);
+            return info;
+        }
+
+        placeGlyph(glyphW, glyphH, codePoint);
+        int x = penX;
+        int y = penY;
+        penX += glyphW + 1;
+        rowHeight = Math.max(rowHeight, glyphH + 1);
+
+        int[] w = new int[1];
+        int[] h = new int[1];
+        int[] xo = new int[1];
+        int[] yo = new int[1];
+        ByteBuffer bitmap = stbtt_GetCodepointBitmap(fontInfo, scale, scale, codePoint, w, h, xo, yo);
+        if (bitmap == null) {
+            GlyphInfo info = new GlyphInfo(codePoint, 0f, 0f, 0f, 0f, 0, 0, xOffset, yOffset, advancePx);
+            glyphCache.put(codePoint, info);
+            return info;
+        }
+
+        glBindTexture(GL_TEXTURE_2D, textureId);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, glyphW, glyphH, GL_RED, GL_UNSIGNED_BYTE, bitmap);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        stbtt_FreeBitmap(bitmap, 0L);
+
+        float u0 = x / (float) atlasWidth;
+        float v0 = y / (float) atlasHeight;
+        float u1 = (x + glyphW) / (float) atlasWidth;
+        float v1 = (y + glyphH) / (float) atlasHeight;
+        GlyphInfo info = new GlyphInfo(codePoint, u0, v0, u1, v1, glyphW, glyphH, xOffset, yOffset, advancePx);
+        glyphCache.put(codePoint, info);
+        return info;
+    }
+
+    private void placeGlyph(int glyphW, int glyphH, int codePoint) {
+        if (penX + glyphW + 1 > atlasWidth) {
+            penX = 1;
+            penY += rowHeight;
+            rowHeight = 0;
+        }
+        if (penY + glyphH + 1 > atlasHeight) {
+            throw new IllegalStateException("font atlas is full while inserting code point: U+" + Integer.toHexString(codePoint));
+        }
     }
 }

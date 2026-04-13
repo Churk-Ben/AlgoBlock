@@ -2,6 +2,7 @@ package com.algoblock.gl;
 
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_BACKSPACE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_F2;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_TAB;
 import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
 import static org.lwjgl.glfw.GLFW.GLFW_RELEASE;
@@ -34,12 +35,15 @@ import com.algoblock.gl.input.CharEvent;
 import com.algoblock.gl.input.InputEvent;
 import com.algoblock.gl.input.InputEventQueue;
 import com.algoblock.gl.input.KeyEvent;
+import com.algoblock.gl.renderer.DisplayTestPattern;
 import com.algoblock.gl.renderer.FontAtlas;
 import com.algoblock.gl.renderer.TerminalBuffer;
 import com.algoblock.gl.renderer.TextRenderer;
 import com.algoblock.gl.ui.TerminalWidget;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
@@ -63,9 +67,12 @@ public class Main {
 
         LevelLoader levelLoader = new LevelLoader();
         Level level1 = levelLoader.loadFromResource("/levels/level-1.json");
-        TerminalBuffer buffer = new TerminalBuffer(120, 40);
+        TerminalBuffer uiBuffer = new TerminalBuffer(120, 40);
+        TerminalBuffer displayTestBuffer = new TerminalBuffer(120, 40);
         BlockRegistry registry = new BlockRegistry();
-        TerminalWidget widget = new TerminalWidget(buffer, registry, level1);
+        TerminalWidget widget = new TerminalWidget(uiBuffer, registry, level1);
+        DisplayTestPattern displayTestPattern = new DisplayTestPattern();
+        AtomicBoolean displayTestMode = new AtomicBoolean(hasDisplayTestArg(args));
         FontAtlas fontAtlas = new FontAtlas(resolveFontPath(), 24, 1024, 1024);
         TextRenderer textRenderer = new TextRenderer(fontAtlas);
         InputEventQueue eventQueue = new InputEventQueue();
@@ -73,6 +80,10 @@ public class Main {
         glfwSetCharCallback(window, (w, codepoint) -> eventQueue.offer(new CharEvent((char) codepoint)));
         glfwSetKeyCallback(window, (w, key, scancode, action, mods) -> {
             if (action == GLFW_PRESS || action == GLFW_RELEASE) {
+                if (key == GLFW_KEY_F2 && action == GLFW_PRESS) {
+                    displayTestMode.set(!displayTestMode.get());
+                    return;
+                }
                 if (key == GLFW_KEY_ENTER || key == GLFW_KEY_BACKSPACE || key == GLFW_KEY_TAB) {
                     eventQueue.offer(new KeyEvent(key, action, mods));
                 }
@@ -102,7 +113,14 @@ public class Main {
             }
             glClearColor(0.05f, 0.07f, 0.09f, 1f);
             glClear(GL_COLOR_BUFFER_BIT);
-            textRenderer.upload(buffer);
+            TerminalBuffer renderBuffer;
+            if (displayTestMode.get()) {
+                displayTestPattern.renderTo(displayTestBuffer, glfwGetTime());
+                renderBuffer = displayTestBuffer;
+            } else {
+                renderBuffer = uiBuffer;
+            }
+            textRenderer.upload(renderBuffer);
             textRenderer.draw();
             glfwSetWindowTitle(window, "AlgoBlock  t=" + String.format("%.1f", glfwGetTime()));
             glfwSwapBuffers(window);
@@ -123,5 +141,9 @@ public class Main {
             return p2.toString();
         }
         throw new IllegalStateException("MapleMono-NF-CN font not found in assets/fonts");
+    }
+
+    private static boolean hasDisplayTestArg(String[] args) {
+        return Arrays.stream(args).anyMatch("--display-test"::equalsIgnoreCase);
     }
 }
