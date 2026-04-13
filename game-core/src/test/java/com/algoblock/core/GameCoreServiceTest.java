@@ -25,7 +25,8 @@ class GameCoreServiceTest {
 
     @Test
     void shouldRejectInvalidSyntax() {
-        Level level = new Level("test", "test", "test", List.of(1), List.of(1), List.of("_INPUT_"), List.of(), List.of(), 5, 10, 100, "");
+        Level level = new Level(1, 1, "test", "test", List.of(1), List.of(1), List.of("_INPUT_", "Invalid", "Syntax"),
+                List.of(), List.of(), 5, 10, 100, "");
         GameCoreService service = new GameCoreService(new BlockRegistry());
         SubmissionResult result = service.submit(level, "Invalid<Syntax", 20);
         assertFalse(result.accepted());
@@ -34,7 +35,8 @@ class GameCoreServiceTest {
 
     @Test
     void shouldRejectUnusedAvailableBlocks() {
-        Level level = new Level("test", "test", "test", List.of(1), List.of(1), List.of("_INPUT_", "Identity"), List.of(), List.of(), 5, 10, 100, "");
+        Level level = new Level(1, 1, "test", "test", List.of(1), List.of(1), List.of("_INPUT_", "Identity"), List.of(),
+                List.of(), 5, 10, 100, "");
         GameCoreService service = new GameCoreService(new BlockRegistry());
         SubmissionResult result = service.submit(level, "Map<_INPUT_>", 20); // Map is not in availableBlocks
         assertFalse(result.accepted());
@@ -43,16 +45,19 @@ class GameCoreServiceTest {
 
     @Test
     void shouldRejectMissingForcedBlocks() {
-        Level level = new Level("test", "test", "test", List.of(1), List.of(1), List.of("_INPUT_", "Identity", "Sort"), List.of("Sort"), List.of(), 5, 10, 100, "");
+        Level level = new Level(1, 1, "test", "test", List.of(1), List.of(1), List.of("_INPUT_", "Identity", "Sort"),
+                List.of("Sort"), List.of(), 5, 10, 100, "");
         GameCoreService service = new GameCoreService(new BlockRegistry());
         SubmissionResult result = service.submit(level, "Identity<_INPUT_>", 20);
         assertFalse(result.accepted());
         assertEquals("缺少必须积木", result.message());
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     void shouldRejectNonComparableSort() {
-        Level level = new Level("test", "test", "test", List.of(List.of(1)), List.of(List.of(1)), List.of("_INPUT_", "Sort"), List.of(), List.of(), 5, 10, 100, "");
+        Level level = new Level(1, 1, "test", "test", (List) List.of(List.of(1)), (List) List.of(List.of(1)),
+                List.of("_INPUT_", "Sort"), List.of(), List.of(), 5, 10, 100, "");
         GameCoreService service = new GameCoreService(new BlockRegistry());
         SubmissionResult result = service.submit(level, "Sort<_INPUT_>", 20);
         assertFalse(result.accepted());
