@@ -1,5 +1,9 @@
 package com.algoblock.core.engine;
 
+import com.algoblock.api.Block;
+import com.algoblock.api.BlockMeta;
+import com.algoblock.api.UnaryBlock;
+import com.algoblock.api.BinaryBlock;
 import com.algoblock.core.levels.Level;
 import java.util.HashSet;
 import java.util.Set;
@@ -24,12 +28,30 @@ public class LevelRules {
         return true;
     }
 
-    public boolean containsForcedBlocks(String expr, Level level) {
+    public boolean containsForcedBlocks(Block<?> root, Level level) {
+        Set<String> found = new HashSet<>();
+        collectBlockNames(root, found);
         for (String forced : level.forcedBlocks()) {
-            if (!expr.contains(forced)) {
+            if (!found.contains(forced)) {
                 return false;
             }
         }
         return true;
+    }
+
+    private void collectBlockNames(Block<?> block, Set<String> found) {
+        if (block == null) return;
+        
+        BlockMeta meta = block.getClass().getAnnotation(BlockMeta.class);
+        if (meta != null) {
+            found.add(meta.name());
+        }
+        
+        if (block instanceof UnaryBlock<?, ?> unary) {
+            collectBlockNames(unary.child(), found);
+        } else if (block instanceof BinaryBlock<?, ?, ?> binary) {
+            collectBlockNames(binary.left(), found);
+            collectBlockNames(binary.right(), found);
+        }
     }
 }

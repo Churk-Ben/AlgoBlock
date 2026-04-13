@@ -25,20 +25,19 @@ public class TerminalBuffer {
         return rows;
     }
 
-    public void set(int col, int row, char c, int fg, int bg) {
+    public synchronized void set(int col, int row, char c, int fg, int bg) {
         if (col < 0 || row < 0 || col >= cols || row >= rows) {
             return;
         }
         cells[row * cols + col] = new Cell(c, fg, bg);
     }
 
-    public void print(int col, int row, String text, int fg, int bg) {
+    public synchronized void print(int col, int row, String text, int fg, int bg) {
         int cursor = col;
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
             set(cursor, row, c, fg, bg);
             cursor++;
-            // If the character is wide (CJK), it occupies 2 cells. We place a placeholder in the next cell.
             if (isWideCodePoint(c)) {
                 set(cursor, row, '\0', fg, bg);
                 cursor++;
@@ -56,11 +55,11 @@ public class TerminalBuffer {
                 || (codePoint >= 0xFFE0 && codePoint <= 0xFFE6);
     }
 
-    public void clear() {
+    public synchronized void clear() {
         Arrays.fill(cells, new Cell(' ', 0xCDD9E5, 0x0D1117));
     }
 
-    public Cell[] cells() {
-        return cells;
+    public synchronized Cell[] cells() {
+        return Arrays.copyOf(cells, cells.length);
     }
 }
