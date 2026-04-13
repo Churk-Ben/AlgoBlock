@@ -1,5 +1,6 @@
 plugins {
     application
+    id("com.gradleup.shadow") version "9.3.1"
 }
 
 val lwjglVersion = "3.3.4"
@@ -21,4 +22,12 @@ dependencies {
 
 application {
     mainClass.set("com.algoblock.gl.Main")
+}
+
+sourceSets {
+    main {
+        resources {
+            srcDir(project.rootProject.file("assets"))
+        }
+    }
 }

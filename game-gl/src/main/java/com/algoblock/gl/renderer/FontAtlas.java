@@ -81,11 +81,8 @@ public class FontAtlas {
         if (atlasWidth <= 0 || atlasHeight <= 0) {
             throw new IllegalArgumentException("atlas size must be > 0");
         }
-        Path fontFile = Path.of(fontPath);
-        if (!Files.exists(fontFile)) {
-            throw new IllegalArgumentException("font not found: " + fontPath);
-        }
-        this.fontData = loadFontData(fontFile);
+
+        this.fontData = loadFontData(fontPath);
         this.fontInfo = STBTTFontinfo.create();
         if (!stbtt_InitFont(fontInfo, fontData)) {
             throw new IllegalStateException("stbtt_InitFont failed for " + fontPath);
@@ -119,14 +116,25 @@ public class FontAtlas {
         ensureGlyph(fallbackCodePoint);
     }
 
-    private static ByteBuffer loadFontData(Path fontFile) {
+    private static ByteBuffer loadFontData(String fontPath) {
         try {
-            byte[] bytes = Files.readAllBytes(fontFile);
+            byte[] bytes;
+            Path fontFile = Path.of(fontPath);
+            if (Files.exists(fontFile)) {
+                bytes = Files.readAllBytes(fontFile);
+            } else {
+                try (java.io.InputStream is = FontAtlas.class.getResourceAsStream("/" + fontPath)) {
+                    if (is == null) {
+                        throw new IllegalStateException("font not found on filesystem or classpath: " + fontPath);
+                    }
+                    bytes = is.readAllBytes();
+                }
+            }
             ByteBuffer buffer = BufferUtils.createByteBuffer(bytes.length);
             buffer.put(bytes).flip();
             return buffer;
         } catch (IOException e) {
-            throw new IllegalStateException("failed to read font: " + fontFile, e);
+            throw new IllegalStateException("failed to read font: " + fontPath, e);
         }
     }
 

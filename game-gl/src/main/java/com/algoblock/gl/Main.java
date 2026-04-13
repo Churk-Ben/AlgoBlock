@@ -167,7 +167,7 @@ public class Main {
         if (Files.exists(p2)) {
             return p2.toString();
         }
-        throw new IllegalStateException("MapleMono-NF-CN font not found in assets/fonts");
+        return "fonts/MapleMono-NF-CN-unhinted/MapleMono-NF-CN-Regular.ttf";
     }
 
     private static boolean hasDisplayTestArg(String[] args) {
