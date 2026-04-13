@@ -7,7 +7,8 @@ public class DisplayTestPattern {
     private static final double FULL_RED_SECONDS = 1.5;
     private static final double FULL_GREEN_SECONDS = 1.5;
     private static final double ROLLING_SECONDS = 8.0;
-    private static final double TOTAL_SECONDS = CHECKERBOARD_SECONDS + FULL_RED_SECONDS + FULL_GREEN_SECONDS + ROLLING_SECONDS;
+    private static final double TOTAL_SECONDS = CHECKERBOARD_SECONDS + FULL_RED_SECONDS + FULL_GREEN_SECONDS
+            + ROLLING_SECONDS;
 
     private static final int BG_DARK_A = 0x101418;
     private static final int BG_DARK_B = 0xD9DEE3;
@@ -50,17 +51,25 @@ public class DisplayTestPattern {
     private static void renderCheckerboard(TerminalBuffer buffer, int cols, int rows, int variant) {
         boolean chinese = variant == 0 || variant == 2;
         boolean inverted = variant >= 2;
-        char evenChar = chinese ? '中' : 'A';
-        char oddChar = chinese ? '文' : 'B';
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
-                boolean evenCell = ((row + col) & 1) == 0;
+                // For Chinese, 1 logical block = 2 cells
+                // For English, 1 logical block = 2 cells (A+B or C+D)
+                int logicalCol = col / 2;
+                boolean evenCell = ((row + logicalCol) & 1) == 0;
                 if (inverted) {
                     evenCell = !evenCell;
                 }
                 int bg = evenCell ? BG_DARK_A : BG_DARK_B;
                 int fg = evenCell ? FG_BRIGHT : FG_DARK;
-                char c = evenCell ? evenChar : oddChar;
+
+                boolean firstHalf = (col & 1) == 0;
+                char c;
+                if (chinese) {
+                    c = firstHalf ? (evenCell ? '中' : '文') : '\0';
+                } else {
+                    c = evenCell ? (firstHalf ? 'A' : 'B') : (firstHalf ? 'C' : 'D');
+                }
                 buffer.set(col, row, c, fg, bg);
             }
         }

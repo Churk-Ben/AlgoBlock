@@ -79,7 +79,7 @@ public class TerminalWidget {
         buffer.print(0, 0, "Level " + level.id() + " - " + level.title(), 0x6CB6FF, 0x0D1117);
         buffer.print(0, 1, level.story(), 0x9FB3C8, 0x0D1117);
         buffer.print(0, 3, "> ", 0xCDD9E5, 0x0D1117);
-        highlighter.highlight(buffer, 3, line.toString());
+        highlighter.highlight(buffer, 2, 3, line.toString());
         if (!suggestions.isEmpty()) {
             int row = 5;
             for (String s : suggestions.stream().limit(6).toList()) {

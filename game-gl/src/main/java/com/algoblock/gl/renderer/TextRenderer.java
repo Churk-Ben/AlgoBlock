@@ -25,6 +25,8 @@ public class TextRenderer {
     private final FontAtlas fontAtlas;
     private int viewportWidth = 1280;
     private int viewportHeight = 720;
+    private boolean fontDiagnosticMode = false;
+    private long lastDiagLogMs = 0L;
 
     public TextRenderer(FontAtlas fontAtlas) {
         this.fontAtlas = fontAtlas;
@@ -37,6 +39,10 @@ public class TextRenderer {
     public void setViewport(int width, int height) {
         viewportWidth = Math.max(1, width);
         viewportHeight = Math.max(1, height);
+    }
+
+    public void setFontDiagnosticMode(boolean enabled) {
+        this.fontDiagnosticMode = enabled;
     }
 
     public int visibleCols() {
@@ -62,8 +68,14 @@ public class TextRenderer {
         float marginY = 0f;
         float cellHeight = cellHeightPx();
         float cellWidth = cellWidthPx();
-        float halfCellWidth = cellWidth * 0.5f;
+        // float halfCellWidth = cellWidth * 0.5f;
         float baselineBias = Math.max(0f, (cellHeight - fontAtlas.lineHeightPx()) * 0.5f);
+
+        for (TerminalBuffer.Cell cell : cells) {
+            if (cell.c() != ' ') {
+                fontAtlas.glyphFor(cell.c());
+            }
+        }
 
         glDisable(GL_TEXTURE_2D);
         glBegin(GL_QUADS);
@@ -87,28 +99,35 @@ public class TextRenderer {
         glEnable(GL_TEXTURE_2D);
         fontAtlas.bindTexture();
         glBegin(GL_QUADS);
+        int nonSpaceCount = 0;
+        int drawnGlyphCount = 0;
+        int skippedNoBitmapCount = 0;
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
                 TerminalBuffer.Cell cell = cells[row * cols + col];
                 char ch = cell.c();
-                if (ch == ' ') {
+                if (ch == ' ' || ch == '\0') {
                     continue;
                 }
+                nonSpaceCount++;
                 int codePoint = ch;
                 FontAtlas.GlyphInfo glyph = fontAtlas.glyphFor(codePoint);
                 if (!glyph.hasBitmap()) {
+                    skippedNoBitmapCount++;
                     continue;
                 }
 
                 boolean wide = isWideCodePoint(codePoint);
-                float targetAdvance = wide ? cellWidth : halfCellWidth;
+                float targetAdvance = wide ? (cellWidth * 2f) : cellWidth;
                 float glyphScale = targetAdvance / Math.max(1f, glyph.advancePx());
                 float glyphW = glyph.bitmapWidth() * glyphScale;
                 float glyphH = glyph.bitmapHeight() * glyphScale;
 
                 float cellX = marginX + col * cellWidth;
                 float cellY = marginY + row * cellHeight;
-                float slotOffset = (cellWidth - targetAdvance) * 0.5f;
+                // If it's a wide character, it spans 2 cells, so we offset based on the 2-cell
+                // width.
+                float slotOffset = (targetAdvance - targetAdvance) * 0.5f; // which is 0
                 float x0 = cellX + slotOffset + glyph.xOffset() * glyphScale;
                 float baselineY = cellY + baselineBias + fontAtlas.ascentPx();
                 float y0 = baselineY + glyph.yOffset() * glyphScale;
@@ -125,11 +144,21 @@ public class TextRenderer {
                 glVertex2f(x1, y1);
                 glTexCoord2f(glyph.u0(), glyph.v1());
                 glVertex2f(x0, y1);
+                drawnGlyphCount++;
             }
         }
         glEnd();
         glDisable(GL_TEXTURE_2D);
         glDisable(GL_BLEND);
+
+        if (fontDiagnosticMode) {
+            long now = System.currentTimeMillis();
+            if (now - lastDiagLogMs >= 1000L) {
+                lastDiagLogMs = now;
+                System.out.printf("[TEXT-DIAG] nonSpace=%d drawn=%d skippedNoBitmap=%d%n",
+                        nonSpaceCount, drawnGlyphCount, skippedNoBitmapCount);
+            }
+        }
     }
 
     public void draw() {
@@ -140,7 +169,8 @@ public class TextRenderer {
     }
 
     private float cellWidthPx() {
-        return Math.max(8f, fontAtlas.cjkAdvancePx() + 2f);
+        // Now cellWidth is the half-width (English character width)
+        return Math.max(4f, (fontAtlas.cjkAdvancePx() * 0.5f) + 1f);
     }
 
     private static boolean isWideCodePoint(int codePoint) {

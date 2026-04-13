@@ -14,29 +14,42 @@ class DisplayTestPatternTest {
         pattern.renderTo(buffer, 0.2);
 
         assertEquals('中', buffer.cells()[0].c());
-        assertEquals('文', buffer.cells()[1].c());
+        assertEquals('\0', buffer.cells()[1].c());
+        assertEquals('文', buffer.cells()[2].c());
+        assertEquals('\0', buffer.cells()[3].c());
+        
         assertEquals(0x101418, buffer.cells()[0].bg());
-        assertEquals(0xD9DEE3, buffer.cells()[1].bg());
+        assertEquals(0x101418, buffer.cells()[1].bg());
+        assertEquals(0xD9DEE3, buffer.cells()[2].bg());
+        assertEquals(0xD9DEE3, buffer.cells()[3].bg());
     }
 
     @Test
     void shouldRotateAllCheckerboardVariants() {
-        TerminalBuffer buffer = new TerminalBuffer(2, 1);
+        TerminalBuffer buffer = new TerminalBuffer(4, 1);
         DisplayTestPattern pattern = new DisplayTestPattern();
 
         pattern.renderTo(buffer, 1.2);
         assertEquals('A', buffer.cells()[0].c());
         assertEquals('B', buffer.cells()[1].c());
+        assertEquals('C', buffer.cells()[2].c());
+        assertEquals('D', buffer.cells()[3].c());
+        assertEquals(buffer.cells()[0].bg(), buffer.cells()[1].bg());
+        assertEquals(buffer.cells()[2].bg(), buffer.cells()[3].bg());
 
         pattern.renderTo(buffer, 2.2);
         assertEquals(0xD9DEE3, buffer.cells()[0].bg());
-        assertEquals(0x101418, buffer.cells()[1].bg());
+        assertEquals(0xD9DEE3, buffer.cells()[1].bg());
         assertEquals('文', buffer.cells()[0].c());
-        assertEquals('中', buffer.cells()[1].c());
+        assertEquals('\0', buffer.cells()[1].c());
+        assertEquals('中', buffer.cells()[2].c());
+        assertEquals('\0', buffer.cells()[3].c());
 
         pattern.renderTo(buffer, 3.2);
-        assertEquals('B', buffer.cells()[0].c());
-        assertEquals('A', buffer.cells()[1].c());
+        assertEquals('C', buffer.cells()[0].c());
+        assertEquals('D', buffer.cells()[1].c());
+        assertEquals('A', buffer.cells()[2].c());
+        assertEquals('B', buffer.cells()[3].c());
     }
 
     @Test
