@@ -38,6 +38,7 @@ import com.algoblock.gl.input.InputEventQueue;
 import com.algoblock.gl.input.KeyEvent;
 import com.algoblock.gl.renderer.DisplayTestPattern;
 import com.algoblock.gl.renderer.FontAtlas;
+import com.algoblock.gl.renderer.FontDiagnosticTestPattern;
 import com.algoblock.gl.renderer.TerminalBuffer;
 import com.algoblock.gl.renderer.TextRenderer;
 import com.algoblock.gl.ui.TerminalWidget;
@@ -74,6 +75,7 @@ public class Main {
         BlockRegistry registry = new BlockRegistry();
         TerminalWidget widget = new TerminalWidget(uiBuffer, registry, level1);
         DisplayTestPattern displayTestPattern = new DisplayTestPattern();
+        FontDiagnosticTestPattern fontDiagnosticPattern = new FontDiagnosticTestPattern();
         AtomicBoolean displayTestMode = new AtomicBoolean(hasDisplayTestArg(args));
         AtomicBoolean fontDiagMode = new AtomicBoolean(hasFontDiagArg(args));
         FontAtlas fontAtlas = new FontAtlas(resolveFontPath(), 24, 1024, 1024);
@@ -84,9 +86,6 @@ public class Main {
         if (fontDiagMode.get()) {
             System.out.println("[FONT-DIAG] enabled by --font-diag");
         }
-
-        // test hook
-        java.util.function.BiConsumer<TerminalBuffer, Double> fontDiagnosticRenderer = getFontDiagnosticRenderer();
 
         glfwSetCharCallback(window, (w, codepoint) -> eventQueue.offer(new CharEvent((char) codepoint)));
         glfwSetKeyCallback(window, (w, key, scancode, action, mods) -> {
@@ -144,8 +143,8 @@ public class Main {
             if (displayTestMode.get()) {
                 displayTestPattern.renderTo(displayTestBuffer, glfwGetTime());
                 renderBuffer = displayTestBuffer;
-            } else if (fontDiagMode.get() && fontDiagnosticRenderer != null) {
-                fontDiagnosticRenderer.accept(fontDiagBuffer, glfwGetTime());
+            } else if (fontDiagMode.get()) {
+                fontDiagnosticPattern.renderTo(fontDiagBuffer, glfwGetTime());
                 renderBuffer = fontDiagBuffer;
             } else {
                 renderBuffer = uiBuffer;
@@ -179,23 +178,5 @@ public class Main {
 
     private static boolean hasFontDiagArg(String[] args) {
         return Arrays.stream(args).anyMatch("--font-diag"::equalsIgnoreCase);
-    }
-
-    @SuppressWarnings("")
-    private static java.util.function.BiConsumer<TerminalBuffer, Double> getFontDiagnosticRenderer() {
-        try {
-            Class<?> clazz = Class.forName("com.algoblock.gl.renderer.FontDiagnosticTestPattern");
-            Object instance = clazz.getDeclaredConstructor().newInstance();
-            java.lang.reflect.Method method = clazz.getMethod("renderTo", TerminalBuffer.class, double.class);
-            return (buffer, time) -> {
-                try {
-                    method.invoke(instance, buffer, time);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            };
-        } catch (Exception e) {
-            return null;
-        }
     }
 }
