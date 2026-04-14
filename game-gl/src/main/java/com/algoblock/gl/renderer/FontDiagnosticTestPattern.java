@@ -6,17 +6,16 @@ public class FontDiagnosticTestPattern {
         int cols = buffer.cols();
         int rows = buffer.rows();
         int wave = ((int) (timeSeconds * 2.0)) & 1;
-        int headerBg = wave == 0 ? 0x1E3A5F : 0x304A6E;
-        putLine(buffer, 0, "[FONT-DIAG] F3 toggle | F2 display-test | expect visible glyphs", 0xF8FCFF, headerBg);
-        putLine(buffer, 1, "ASCII: ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789 +-*/=_[]{}", 0xFFD580, 0x1B1F24);
-        putLine(buffer, 2, "latin: MapleMono test -> TheQuickBrownFox_jumps_42", 0x9FE6A0, 0x1B1F24);
-        putLine(buffer, 3, "CJK: 中文测试 汉字宽度 对齐 验证 你好世界", 0x7CC7FF, 0x1B1F24);
-        putLine(buffer, 4, "mix: A中B文C汉D字E  2:1 width visual check", 0xE7B4FF, 0x1B1F24);
+        putLine(buffer, 0, "[Title] Text Test Pattern", 0xF8FCFF, 0x304A6E);
+        putLine(buffer, 1, "ASCII:  ABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789 +-*/=_[]{}", 0xFFD580, 0x1B1F24);
+        putLine(buffer, 2, "latin:  MapleMono test -> TheQuickBrownFox_jumps_42", 0x9FE6A0, 0x1B1F24);
+        putLine(buffer, 3, "CJK:    中文测试 汉字宽度 对齐 验证 你好世界", 0x7CC7FF, 0x1B1F24);
+        putLine(buffer, 4, "mix:    A中B文C汉D字E  2:1 width visual check", 0xE7B4FF, 0x1B1F24);
         putLine(buffer, 5, "symbol: <> () {} [] @#%&*!? .,:;|\\/~`", 0xFF9AA2, 0x1B1F24);
         putLine(buffer, 7, "If only background shows: check stdout [FONT-DIAG] glyph lines.", 0xFFE48A, 0x2A1F1A);
         for (int row = 8; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
-                int shade = ((row + col + wave) & 1) == 0 ? 0x11161D : 0x0E1319;
+                int shade = ((row + col + wave) & 1) == 0 ? 0x101010 : 0x202020;
                 buffer.set(col, row, ' ', 0xFFFFFF, shade);
             }
         }
