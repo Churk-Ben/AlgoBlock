@@ -1,12 +1,15 @@
 package com.algoblock.gl;
 
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_BACKSPACE;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_DELETE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F2;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F3;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_TAB;
 import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
-import static org.lwjgl.glfw.GLFW.GLFW_RELEASE;
+import static org.lwjgl.glfw.GLFW.GLFW_REPEAT;
 import static org.lwjgl.glfw.GLFW.GLFW_RESIZABLE;
 import static org.lwjgl.glfw.GLFW.GLFW_TRUE;
 import static org.lwjgl.glfw.GLFW.glfwCreateWindow;
@@ -30,18 +33,27 @@ import static org.lwjgl.opengl.GL11.glClear;
 import static org.lwjgl.opengl.GL11.glClearColor;
 
 import com.algoblock.core.engine.BlockRegistry;
+import com.algoblock.core.engine.GameCoreService;
 import com.algoblock.core.levels.Level;
 import com.algoblock.core.levels.LevelLoader;
 import com.algoblock.gl.input.CharEvent;
 import com.algoblock.gl.input.InputEvent;
 import com.algoblock.gl.input.InputEventQueue;
 import com.algoblock.gl.input.KeyEvent;
+import com.algoblock.gl.renderer.CursorRenderer;
 import com.algoblock.gl.renderer.DisplayTestPattern;
+import com.algoblock.gl.renderer.EffectsRenderer;
 import com.algoblock.gl.renderer.FontAtlas;
 import com.algoblock.gl.renderer.FontDiagnosticTestPattern;
+import com.algoblock.gl.renderer.RenderFrame;
 import com.algoblock.gl.renderer.TerminalBuffer;
 import com.algoblock.gl.renderer.TextRenderer;
-import com.algoblock.gl.ui.TerminalWidget;
+import com.algoblock.gl.ui.Completer;
+import com.algoblock.gl.ui.tea.UiModel;
+import com.algoblock.gl.ui.tea.UiMsg;
+import com.algoblock.gl.ui.tea.UiRuntime;
+import com.algoblock.gl.ui.tea.UiUpdate;
+import com.algoblock.gl.ui.tea.UiView;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -73,13 +85,22 @@ public class Main {
         TerminalBuffer displayTestBuffer = new TerminalBuffer(120, 40);
         TerminalBuffer fontDiagBuffer = new TerminalBuffer(120, 40);
         BlockRegistry registry = new BlockRegistry();
-        TerminalWidget widget = new TerminalWidget(uiBuffer, registry, level1);
+        GameCoreService service = new GameCoreService(registry);
+        UiUpdate update = new UiUpdate(new Completer(registry));
+        UiView view = new UiView();
+        UiRuntime uiRuntime = new UiRuntime(
+                update,
+                view,
+                service,
+                UiModel.initial(level1, System.currentTimeMillis() / 1000));
         DisplayTestPattern displayTestPattern = new DisplayTestPattern();
         FontDiagnosticTestPattern fontDiagnosticPattern = new FontDiagnosticTestPattern();
         AtomicBoolean displayTestMode = new AtomicBoolean(hasDisplayTestArg(args));
         AtomicBoolean fontDiagMode = new AtomicBoolean(hasFontDiagArg(args));
         FontAtlas fontAtlas = new FontAtlas(resolveFontPath(), 24, 1024, 1024);
         TextRenderer textRenderer = new TextRenderer(fontAtlas);
+        CursorRenderer cursorRenderer = new CursorRenderer();
+        EffectsRenderer effectsRenderer = new EffectsRenderer();
         textRenderer.setFontDiagnosticMode(fontDiagMode.get());
         InputEventQueue eventQueue = new InputEventQueue();
 
@@ -89,7 +110,7 @@ public class Main {
 
         glfwSetCharCallback(window, (w, codepoint) -> eventQueue.offer(new CharEvent((char) codepoint)));
         glfwSetKeyCallback(window, (w, key, scancode, action, mods) -> {
-            if (action == GLFW_PRESS || action == GLFW_RELEASE) {
+            if (action == GLFW_PRESS || action == GLFW_REPEAT) {
                 if (key == GLFW_KEY_F2 && action == GLFW_PRESS) {
                     displayTestMode.set(!displayTestMode.get());
                     return;
@@ -100,7 +121,12 @@ public class Main {
                     System.out.println("[FONT-DIAG] mode=" + (fontDiagMode.get() ? "ON" : "OFF"));
                     return;
                 }
-                if (key == GLFW_KEY_ENTER || key == GLFW_KEY_BACKSPACE || key == GLFW_KEY_TAB) {
+                if (key == GLFW_KEY_ENTER
+                        || key == GLFW_KEY_BACKSPACE
+                        || key == GLFW_KEY_TAB
+                        || key == GLFW_KEY_LEFT
+                        || key == GLFW_KEY_RIGHT
+                        || key == GLFW_KEY_DELETE) {
                     eventQueue.offer(new KeyEvent(key, action, mods));
                 }
             }
@@ -110,7 +136,11 @@ public class Main {
             while (!glfwWindowShouldClose(window)) {
                 try {
                     InputEvent event = eventQueue.take();
-                    widget.onEvent(event);
+                    if (event instanceof CharEvent c) {
+                        uiRuntime.dispatch(new UiMsg.CharTyped(c.value()));
+                    } else if (event instanceof KeyEvent k) {
+                        uiRuntime.dispatch(new UiMsg.KeyPressed(k.key()));
+                    }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     return;
@@ -130,6 +160,9 @@ public class Main {
                 textRenderer.setViewport(viewportW, viewportH);
                 int dynamicCols = textRenderer.visibleCols();
                 int dynamicRows = textRenderer.visibleRows();
+                if (uiBuffer.cols() != dynamicCols || uiBuffer.rows() != dynamicRows) {
+                    uiBuffer = new TerminalBuffer(dynamicCols, dynamicRows);
+                }
                 if (displayTestBuffer.cols() != dynamicCols || displayTestBuffer.rows() != dynamicRows) {
                     displayTestBuffer = new TerminalBuffer(dynamicCols, dynamicRows);
                 }
@@ -140,6 +173,7 @@ public class Main {
             glClearColor(0.05f, 0.07f, 0.09f, 1f);
             glClear(GL_COLOR_BUFFER_BIT);
             TerminalBuffer renderBuffer;
+            RenderFrame uiFrame = null;
             if (displayTestMode.get()) {
                 displayTestPattern.renderTo(displayTestBuffer, glfwGetTime());
                 renderBuffer = displayTestBuffer;
@@ -147,15 +181,21 @@ public class Main {
                 fontDiagnosticPattern.renderTo(fontDiagBuffer, glfwGetTime());
                 renderBuffer = fontDiagBuffer;
             } else {
-                renderBuffer = uiBuffer;
+                uiFrame = uiRuntime.render(uiBuffer, System.currentTimeMillis());
+                renderBuffer = uiFrame.textBuffer();
             }
             textRenderer.upload(renderBuffer);
             textRenderer.draw();
+            if (uiFrame != null) {
+                cursorRenderer.draw(uiFrame, textRenderer);
+                effectsRenderer.draw(uiFrame, textRenderer, glfwGetTime());
+            }
             glfwSetWindowTitle(window, "AlgoBlock  t=" + String.format("%.1f", glfwGetTime()));
             glfwSwapBuffers(window);
             glfwPollEvents();
         }
 
+        uiRuntime.close();
         glfwDestroyWindow(window);
         glfwTerminate();
     }

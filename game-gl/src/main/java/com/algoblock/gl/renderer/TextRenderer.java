@@ -27,6 +27,7 @@ public class TextRenderer {
     private int viewportHeight = 720;
     private boolean fontDiagnosticMode = false;
     private long lastDiagLogMs = 0L;
+    private TerminalBuffer stagedBuffer;
 
     public TextRenderer(FontAtlas fontAtlas) {
         this.fontAtlas = fontAtlas;
@@ -54,6 +55,34 @@ public class TextRenderer {
     }
 
     public void upload(TerminalBuffer buffer) {
+        this.stagedBuffer = buffer;
+    }
+
+    public void draw() {
+        if (stagedBuffer == null) {
+            return;
+        }
+        drawTextLayer(stagedBuffer);
+    }
+
+    public int viewportWidth() {
+        return viewportWidth;
+    }
+
+    public int viewportHeight() {
+        return viewportHeight;
+    }
+
+    public float cellHeightPx() {
+        return Math.max(10f, fontAtlas.lineHeightPx() + 4f);
+    }
+
+    public float cellWidthPx() {
+        // Now cellWidth is the half-width (English character width)
+        return Math.max(4f, (fontAtlas.cjkAdvancePx() * 0.5f) + 1f);
+    }
+
+    private void drawTextLayer(TerminalBuffer buffer) {
         glViewport(0, 0, viewportWidth, viewportHeight);
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
@@ -159,18 +188,6 @@ public class TextRenderer {
                         nonSpaceCount, drawnGlyphCount, skippedNoBitmapCount);
             }
         }
-    }
-
-    public void draw() {
-    }
-
-    private float cellHeightPx() {
-        return Math.max(10f, fontAtlas.lineHeightPx() + 4f);
-    }
-
-    private float cellWidthPx() {
-        // Now cellWidth is the half-width (English character width)
-        return Math.max(4f, (fontAtlas.cjkAdvancePx() * 0.5f) + 1f);
     }
 
     private static boolean isWideCodePoint(int codePoint) {
