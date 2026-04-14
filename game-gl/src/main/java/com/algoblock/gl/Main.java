@@ -175,7 +175,7 @@ public class Main {
             TerminalBuffer renderBuffer;
             RenderFrame uiFrame = null;
             if (displayTestMode.get()) {
-                displayTestPattern.renderTo(displayTestBuffer, glfwGetTime());
+                uiFrame = displayTestPattern.renderTo(displayTestBuffer, glfwGetTime());
                 renderBuffer = displayTestBuffer;
             } else if (fontDiagMode.get()) {
                 fontDiagnosticPattern.renderTo(fontDiagBuffer, glfwGetTime());
@@ -187,7 +187,7 @@ public class Main {
             textRenderer.upload(renderBuffer);
             textRenderer.draw();
             if (uiFrame != null) {
-                cursorRenderer.draw(uiFrame, textRenderer);
+                cursorRenderer.draw(uiFrame, textRenderer, glfwGetTime());
                 effectsRenderer.draw(uiFrame, textRenderer, glfwGetTime());
             }
             glfwSetWindowTitle(window, "AlgoBlock  t=" + String.format("%.1f", glfwGetTime()));

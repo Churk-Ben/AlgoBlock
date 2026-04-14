@@ -18,27 +18,47 @@ public class DisplayTestPattern {
     private static final int FG_BRIGHT = 0xF8FCFF;
     private static final int FG_DARK = 0x0E1116;
 
-    public void renderTo(TerminalBuffer buffer, double timeSeconds) {
+    public RenderFrame renderTo(TerminalBuffer buffer, double timeSeconds) {
         int cols = buffer.cols();
         int rows = buffer.rows();
         double t = normalize(timeSeconds);
         if (t < CHECKERBOARD_SECONDS) {
             int variant = Math.min(CHECKERBOARD_VARIANTS - 1, (int) (t / CHECKERBOARD_VARIANT_SECONDS));
             renderCheckerboard(buffer, cols, rows, variant);
-            return;
+            return null;
         }
         t -= CHECKERBOARD_SECONDS;
         if (t < FULL_RED_SECONDS) {
             fill(buffer, cols, rows, BG_RED);
-            return;
+            return null;
         }
         t -= FULL_RED_SECONDS;
         if (t < FULL_GREEN_SECONDS) {
             fill(buffer, cols, rows, BG_GREEN);
-            return;
+            return null;
         }
         t -= FULL_GREEN_SECONDS;
-        renderRolling(buffer, cols, rows, t);
+
+        // Cursor jump test
+        fill(buffer, cols, rows, BG_IDLE);
+        int cursorCol = 0;
+        int cursorRow = 0;
+        int phase = (int) (t * 2.0) % 4; // jump twice a second
+        if (phase == 0) {
+            cursorCol = 1;
+            cursorRow = 1; // Top-Left
+        } else if (phase == 1) {
+            cursorCol = cols - 2;
+            cursorRow = 1; // Top-Right
+        } else if (phase == 2) {
+            cursorCol = 1;
+            cursorRow = rows - 2; // Bottom-Left
+        } else {
+            cursorCol = cols - 2;
+            cursorRow = rows - 2; // Bottom-Right
+        }
+
+        return new RenderFrame(buffer, cursorCol, cursorRow, true, true, 0x00FF00, 0.0f);
     }
 
     private static double normalize(double t) {
@@ -81,38 +101,5 @@ public class DisplayTestPattern {
                 buffer.set(col, row, ' ', 0xFFFFFF, bg);
             }
         }
-    }
-
-    private static void renderRolling(TerminalBuffer buffer, int cols, int rows, double localTime) {
-        int totalCells = Math.max(1, cols * rows);
-        float continuous = (float) ((localTime / ROLLING_SECONDS) * totalCells);
-        int head = ((int) Math.floor(continuous)) % totalCells;
-        int tailLength = Math.max(3, Math.min(10, cols / 3));
-        for (int i = 0; i < totalCells; i++) {
-            int col = i % cols;
-            int row = i / cols;
-            int bg = BG_IDLE;
-            int distance = (head - i + totalCells) % totalCells;
-            if (distance == 0) {
-                bg = BG_RED;
-            } else if (distance <= tailLength) {
-                float k = 1f - (distance / (float) (tailLength + 1));
-                bg = lerpColor(BG_IDLE, 0xFFB000, k);
-            }
-            buffer.set(col, row, ' ', 0xFFFFFF, bg);
-        }
-    }
-
-    private static int lerpColor(int a, int b, float t) {
-        int ar = (a >> 16) & 0xFF;
-        int ag = (a >> 8) & 0xFF;
-        int ab = a & 0xFF;
-        int br = (b >> 16) & 0xFF;
-        int bg = (b >> 8) & 0xFF;
-        int bb = b & 0xFF;
-        int r = (int) (ar + (br - ar) * t);
-        int g = (int) (ag + (bg - ag) * t);
-        int bl = (int) (ab + (bb - ab) * t);
-        return (r << 16) | (g << 8) | bl;
     }
 }

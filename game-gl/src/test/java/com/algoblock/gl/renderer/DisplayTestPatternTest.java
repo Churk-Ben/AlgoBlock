@@ -1,7 +1,6 @@
 package com.algoblock.gl.renderer;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +16,7 @@ class DisplayTestPatternTest {
         assertEquals('\0', buffer.cells()[1].c());
         assertEquals('文', buffer.cells()[2].c());
         assertEquals('\0', buffer.cells()[3].c());
-        
+
         assertEquals(0x101418, buffer.cells()[0].bg());
         assertEquals(0x101418, buffer.cells()[1].bg());
         assertEquals(0xD9DEE3, buffer.cells()[2].bg());
@@ -69,23 +68,16 @@ class DisplayTestPatternTest {
     }
 
     @Test
-    void shouldRenderRollingPhaseWithSmoothTail() {
-        TerminalBuffer buffer = new TerminalBuffer(5, 2);
+    void shouldReturnCursorFrameForJumpingTest() {
+        TerminalBuffer buffer = new TerminalBuffer(5, 5);
         DisplayTestPattern pattern = new DisplayTestPattern();
 
-        pattern.renderTo(buffer, 7.1);
+        RenderFrame frame0 = pattern.renderTo(buffer, 7.1);
+        assertEquals(1, frame0.cursorCol());
+        assertEquals(1, frame0.cursorRow());
 
-        int red = 0;
-        int highlighted = 0;
-        for (TerminalBuffer.Cell cell : buffer.cells()) {
-            if (cell.bg() == 0xFF0000) {
-                red++;
-            }
-            if (cell.bg() != 0x1C2833) {
-                highlighted++;
-            }
-        }
-        assertEquals(1, red);
-        assertTrue(highlighted > 1);
+        RenderFrame frame1 = pattern.renderTo(buffer, 7.6);
+        assertEquals(3, frame1.cursorCol());
+        assertEquals(1, frame1.cursorRow());
     }
 }
