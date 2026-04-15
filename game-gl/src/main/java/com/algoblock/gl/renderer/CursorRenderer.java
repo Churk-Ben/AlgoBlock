@@ -23,11 +23,11 @@ public class CursorRenderer {
             return;
 
         int vert = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vert, loadShaderSource("/shaders/cursor.vert"));
+        glShaderSource(vert, loadShaderSource("/shaders/cursor_vert.glsl"));
         glCompileShader(vert);
 
         int frag = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(frag, loadShaderSource("/shaders/cursor.frag"));
+        glShaderSource(frag, loadShaderSource("/shaders/cursor_frag.glsl"));
         glCompileShader(frag);
 
         shaderProgram = glCreateProgram();
