@@ -16,6 +16,22 @@ public class UiUpdate {
     }
 
     public UiUpdateResult update(UiModel model, UiMsg msg) {
+        if (model.screen() == UiModel.Screen.START) {
+            if (msg instanceof UiMsg.KeyPressed keyPressed && KeyMapper.isSubmit(keyPressed.key())) {
+                UiModel next = new UiModel(
+                        UiModel.Screen.GAME,
+                        model.level(),
+                        model.line(),
+                        model.cursorIndex(),
+                        model.suggestions(),
+                        model.lastResult(),
+                        System.currentTimeMillis() / 1000,
+                        model.cursorSolidUntilMillis());
+                return new UiUpdateResult(next, List.of());
+            }
+            return new UiUpdateResult(model, List.of());
+        }
+
         if (msg instanceof UiMsg.CharTyped typed) {
             return onCharTyped(model, typed.value());
         }
@@ -23,7 +39,7 @@ public class UiUpdate {
             return onKeyPressed(model, keyPressed.key());
         }
         if (msg instanceof UiMsg.SubmitFinished submitFinished) {
-            UiModel next = with(model, model.line(), model.cursorIndex(), List.of(), submitFinished.result(),
+            UiModel next = with(model, UiModel.Screen.GAME, model.line(), model.cursorIndex(), List.of(), submitFinished.result(),
                     model.cursorSolidUntilMillis());
             return new UiUpdateResult(next, List.of());
         }
@@ -35,7 +51,7 @@ public class UiUpdate {
         int cursor = clampCursor(model.cursorIndex(), line.length());
         String nextLine = line.substring(0, cursor) + value + line.substring(cursor);
         long solidUntil = nowMillis() + CURSOR_SOLID_AFTER_EDIT_MS;
-        UiModel next = with(model, nextLine, cursor + 1, List.of(), model.lastResult(), solidUntil);
+        UiModel next = with(model, UiModel.Screen.GAME, nextLine, cursor + 1, List.of(), model.lastResult(), solidUntil);
         return new UiUpdateResult(next, List.of());
     }
 
@@ -46,22 +62,22 @@ public class UiUpdate {
         if (KeyMapper.isBackspace(key) && cursor > 0) {
             String nextLine = line.substring(0, cursor - 1) + line.substring(cursor);
             long solidUntil = nowMillis() + CURSOR_SOLID_AFTER_EDIT_MS;
-            UiModel next = with(model, nextLine, cursor - 1, List.of(), model.lastResult(), solidUntil);
+            UiModel next = with(model, UiModel.Screen.GAME, nextLine, cursor - 1, List.of(), model.lastResult(), solidUntil);
             return new UiUpdateResult(next, List.of());
         }
         if (KeyMapper.isDelete(key) && cursor < line.length()) {
             String nextLine = line.substring(0, cursor) + line.substring(cursor + 1);
             long solidUntil = nowMillis() + CURSOR_SOLID_AFTER_EDIT_MS;
-            UiModel next = with(model, nextLine, cursor, List.of(), model.lastResult(), solidUntil);
+            UiModel next = with(model, UiModel.Screen.GAME, nextLine, cursor, List.of(), model.lastResult(), solidUntil);
             return new UiUpdateResult(next, List.of());
         }
         if (KeyMapper.isLeft(key)) {
-            UiModel next = with(model, line, Math.max(0, cursor - 1), model.suggestions(), model.lastResult(),
+            UiModel next = with(model, UiModel.Screen.GAME, line, Math.max(0, cursor - 1), model.suggestions(), model.lastResult(),
                     model.cursorSolidUntilMillis());
             return new UiUpdateResult(next, List.of());
         }
         if (KeyMapper.isRight(key)) {
-            UiModel next = with(model, line, Math.min(line.length(), cursor + 1), model.suggestions(),
+            UiModel next = with(model, UiModel.Screen.GAME, line, Math.min(line.length(), cursor + 1), model.suggestions(),
                     model.lastResult(), model.cursorSolidUntilMillis());
             return new UiUpdateResult(next, List.of());
         }
@@ -69,13 +85,13 @@ public class UiUpdate {
             String prefix = currentPrefix(line, cursor);
             Set<String> available = new HashSet<>(model.level().availableBlocks());
             List<String> suggestions = completer.complete(prefix, available);
-            UiModel next = with(model, line, cursor, suggestions, model.lastResult(), model.cursorSolidUntilMillis());
+            UiModel next = with(model, UiModel.Screen.GAME, line, cursor, suggestions, model.lastResult(), model.cursorSolidUntilMillis());
             return new UiUpdateResult(next, List.of());
         }
         if (KeyMapper.isSubmit(key)) {
             long elapsed = (System.currentTimeMillis() / 1000) - model.startEpochSeconds();
             UiCommand.Submit command = new UiCommand.Submit(model.level(), line, elapsed);
-            UiModel next = with(model, line, cursor, List.of(), model.lastResult(), model.cursorSolidUntilMillis());
+            UiModel next = with(model, UiModel.Screen.GAME, line, cursor, List.of(), model.lastResult(), model.cursorSolidUntilMillis());
             return new UiUpdateResult(next, List.of(command));
         }
         return new UiUpdateResult(model, List.of());
@@ -83,12 +99,14 @@ public class UiUpdate {
 
     private static UiModel with(
             UiModel base,
+            UiModel.Screen screen,
             String line,
             int cursorIndex,
             List<String> suggestions,
             SubmissionResult lastResult,
             long cursorSolidUntilMillis) {
         return new UiModel(
+                screen,
                 base.level(),
                 line,
                 cursorIndex,

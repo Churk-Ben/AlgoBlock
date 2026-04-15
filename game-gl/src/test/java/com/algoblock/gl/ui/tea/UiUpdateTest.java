@@ -18,6 +18,8 @@ class UiUpdateTest {
     void shouldInsertAtCursorAndMoveLeftRight() {
         UiUpdate update = new UiUpdate(new Completer(new BlockRegistry()));
         UiModel model = UiModel.initial(level(), 1L);
+        // Transition to GAME screen
+        model = update.update(model, new UiMsg.KeyPressed(257)).model(); // enter
 
         model = update.update(model, new UiMsg.CharTyped('a')).model();
         model = update.update(model, new UiMsg.CharTyped('c')).model();
@@ -32,7 +34,7 @@ class UiUpdateTest {
     @Test
     void shouldSupportBackspaceAndDelete() {
         UiUpdate update = new UiUpdate(new Completer(new BlockRegistry()));
-        UiModel model = new UiModel(level(), "abcd", 2, List.of(), null, 1L, 0L);
+        UiModel model = new UiModel(UiModel.Screen.GAME, level(), "abcd", 2, List.of(), null, 1L, 0L);
 
         model = update.update(model, new UiMsg.KeyPressed(259)).model(); // backspace
         assertEquals("acd", model.line());
@@ -46,7 +48,7 @@ class UiUpdateTest {
     @Test
     void shouldGenerateSuggestionsOnTab() {
         UiUpdate update = new UiUpdate(new Completer(new BlockRegistry()));
-        UiModel model = new UiModel(level(), "Ma", 2, List.of(), null, 1L, 0L);
+        UiModel model = new UiModel(UiModel.Screen.GAME, level(), "Ma", 2, List.of(), null, 1L, 0L);
 
         UiModel next = update.update(model, new UiMsg.KeyPressed(258)).model(); // tab
 
@@ -56,7 +58,7 @@ class UiUpdateTest {
     @Test
     void shouldEmitSubmitCommandAndApplySubmitResult() {
         UiUpdate update = new UiUpdate(new Completer(new BlockRegistry()));
-        UiModel model = new UiModel(level(), "Map _INPUT_", 11, List.of("Map"), null, 1L, 0L);
+        UiModel model = new UiModel(UiModel.Screen.GAME, level(), "Map _INPUT_", 11, List.of("Map"), null, 1L, 0L);
 
         UiUpdate.UiUpdateResult result = update.update(model, new UiMsg.KeyPressed(257)); // enter
         assertEquals(1, result.commands().size());
