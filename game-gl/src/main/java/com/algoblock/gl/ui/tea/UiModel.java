@@ -10,8 +10,9 @@ public record UiModel(
         int cursorIndex,
         List<String> suggestions,
         SubmissionResult lastResult,
-        long startEpochSeconds) {
+        long startEpochSeconds,
+        long cursorSolidUntilMillis) {
     public static UiModel initial(Level level, long nowEpochSeconds) {
-        return new UiModel(level, "", 0, List.of(), null, nowEpochSeconds);
+        return new UiModel(level, "", 0, List.of(), null, nowEpochSeconds, 0L);
     }
 }

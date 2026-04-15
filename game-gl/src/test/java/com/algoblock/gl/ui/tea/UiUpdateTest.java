@@ -26,12 +26,13 @@ class UiUpdateTest {
 
         assertEquals("abc", model.line());
         assertEquals(2, model.cursorIndex());
+        assertTrue(model.cursorSolidUntilMillis() > 0L);
     }
 
     @Test
     void shouldSupportBackspaceAndDelete() {
         UiUpdate update = new UiUpdate(new Completer(new BlockRegistry()));
-        UiModel model = new UiModel(level(), "abcd", 2, List.of(), null, 1L);
+        UiModel model = new UiModel(level(), "abcd", 2, List.of(), null, 1L, 0L);
 
         model = update.update(model, new UiMsg.KeyPressed(259)).model(); // backspace
         assertEquals("acd", model.line());
@@ -45,7 +46,7 @@ class UiUpdateTest {
     @Test
     void shouldGenerateSuggestionsOnTab() {
         UiUpdate update = new UiUpdate(new Completer(new BlockRegistry()));
-        UiModel model = new UiModel(level(), "Ma", 2, List.of(), null, 1L);
+        UiModel model = new UiModel(level(), "Ma", 2, List.of(), null, 1L, 0L);
 
         UiModel next = update.update(model, new UiMsg.KeyPressed(258)).model(); // tab
 
@@ -55,7 +56,7 @@ class UiUpdateTest {
     @Test
     void shouldEmitSubmitCommandAndApplySubmitResult() {
         UiUpdate update = new UiUpdate(new Completer(new BlockRegistry()));
-        UiModel model = new UiModel(level(), "Map _INPUT_", 11, List.of("Map"), null, 1L);
+        UiModel model = new UiModel(level(), "Map _INPUT_", 11, List.of("Map"), null, 1L, 0L);
 
         UiUpdate.UiUpdateResult result = update.update(model, new UiMsg.KeyPressed(257)); // enter
         assertEquals(1, result.commands().size());

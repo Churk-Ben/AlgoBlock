@@ -38,7 +38,8 @@ public class UiView {
 
         int cursorCol = Math.min(buffer.cols() - 1, Math.max(0, 2 + visualOffset(model.line(), model.cursorIndex())));
         int cursorRow = Math.min(buffer.rows() - 1, 3);
-        boolean blinkVisible = ((nowMillis / 500L) % 2L) == 0L;
+        boolean forceSolidVisible = nowMillis < model.cursorSolidUntilMillis();
+        boolean blinkVisible = forceSolidVisible || ((nowMillis / 500L) % 2L) == 0L;
         return new RenderFrame(buffer, cursorCol, cursorRow, blinkVisible, true, 0x79C0FF, 0.20f);
     }
 
