@@ -147,21 +147,22 @@ public class TextRenderer {
                 }
 
                 boolean wide = isWideCodePoint(codePoint);
-                float targetAdvance = wide ? (cellWidth * 2f) : cellWidth;
-                float glyphScale = targetAdvance / Math.max(1f, glyph.advancePx());
-                float glyphW = glyph.bitmapWidth() * glyphScale;
-                float glyphH = glyph.bitmapHeight() * glyphScale;
+                float slotWidth = wide ? (cellWidth * 2f) : cellWidth;
+                float glyphW = glyph.bitmapWidth();
+                float glyphH = glyph.bitmapHeight();
 
                 float cellX = marginX + col * cellWidth;
                 float cellY = marginY + row * cellHeight;
-                // If it's a wide character, it spans 2 cells, so we offset based on the 2-cell
-                // width.
-                float slotOffset = (targetAdvance - targetAdvance) * 0.5f; // which is 0
-                float x0 = cellX + slotOffset + glyph.xOffset() * glyphScale;
+                float slotOffset = Math.max(0f, (slotWidth - glyph.advancePx()) * 0.5f);
+                float x0 = cellX + slotOffset + glyph.xOffset();
                 float baselineY = cellY + baselineBias + fontAtlas.ascentPx();
-                float y0 = baselineY + glyph.yOffset() * glyphScale;
+                float y0 = baselineY + glyph.yOffset();
                 float x1 = x0 + glyphW;
                 float y1 = y0 + glyphH;
+                x0 = Math.round(x0);
+                y0 = Math.round(y0);
+                x1 = Math.round(x1);
+                y1 = Math.round(y1);
 
                 int fg = cell.fg();
                 glColor4f(((fg >> 16) & 0xFF) / 255f, ((fg >> 8) & 0xFF) / 255f, (fg & 0xFF) / 255f, 1f);
