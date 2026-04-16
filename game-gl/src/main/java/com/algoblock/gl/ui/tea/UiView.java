@@ -4,21 +4,27 @@ import com.algoblock.core.engine.SubmissionResult;
 import com.algoblock.gl.renderer.RenderFrame;
 import com.algoblock.gl.renderer.TerminalBuffer;
 import com.algoblock.gl.ui.SyntaxHighlighter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Random;
+import java.util.stream.Stream;
 
 public class UiView {
     private static final int BG = 0x0D1117;
     private static final int FG = 0xCDD9E5;
     private final SyntaxHighlighter highlighter = new SyntaxHighlighter();
     private final CMatrixEffect cmatrix = new CMatrixEffect();
+    private final String[] titleArt = loadRandomTitleArt();
 
-    private static final String[] TITLE_ART = {
-            "   _____  .__                __________.__                 __      ",
-            "  /  _  \\ |  |   ____  ____  \\______   \\  |   ____   ____ |  | __  ",
-            " /  /_\\  \\|  |  / ___\\/  _ \\  |    |  _/  |  /  _ \\_/ ___\\|  |/ /  ",
-            "/    |    \\  |_/ /_/  >  <_> )|    |   \\  |_(  <_> )  \\___|    <   ",
-            "\\____|__  /____/\\___  /\\____/ |______  /____/\\____/ \\___  >__|_ \\  ",
-            "        \\/     /_____/               \\/                 \\/     \\/  "
+    private static final String[] FALLBACK_TITLE_ART = {
+            " _______ __               ______ __              __    ",
+            "|   _   |  |.-----.-----.|   __ \\  |.-----.----.|  |--.",
+            "|       |  ||  _  |  _  ||   __ <  ||  _  |  __||    < ",
+            "|___|___|__||___  |_____||______/__||_____|____||__|__|",
+            "            |_____|                                    "
     };
 
     public RenderFrame render(UiModel model, TerminalBuffer buffer, long nowMillis) {
@@ -87,14 +93,14 @@ public class UiView {
 
         // Draw title
         int titleStartRow = rows / 4;
-        for (int i = 0; i < TITLE_ART.length; i++) {
-            String line = TITLE_ART[i];
+        for (int i = 0; i < titleArt.length; i++) {
+            String line = titleArt[i];
             int titleStartCol = (cols - line.length()) / 2;
             buffer.print(Math.max(0, titleStartCol), titleStartRow + i, line, 0x00FF00, BG);
         }
 
         // Draw options
-        int optionsStartRow = titleStartRow + TITLE_ART.length + 3;
+        int optionsStartRow = titleStartRow + titleArt.length + 3;
         String startText = "> Press ENTER to Start Game <";
         int startCol = (cols - startText.length()) / 2;
         boolean blinkVisible = ((nowMillis / 500L) % 2L) == 0L;
@@ -107,6 +113,56 @@ public class UiView {
         buffer.print(Math.max(0, placeholderCol), optionsStartRow + 2, placeholderText, 0x888888, BG);
 
         return new RenderFrame(buffer, -1, -1, false, false, 0, 0f);
+    }
+
+    private static String[] loadRandomTitleArt() {
+        List<Path> titleFiles = findTitleFiles();
+        if (titleFiles.isEmpty()) {
+            return FALLBACK_TITLE_ART;
+        }
+
+        Path selected = titleFiles.get(new Random().nextInt(titleFiles.size()));
+        try {
+            List<String> lines = Files.readAllLines(selected, StandardCharsets.UTF_8);
+            trimTrailingEmptyLines(lines);
+            if (lines.isEmpty()) {
+                return FALLBACK_TITLE_ART;
+            }
+            return lines.toArray(String[]::new);
+        } catch (IOException e) {
+            return FALLBACK_TITLE_ART;
+        }
+    }
+
+    private static List<Path> findTitleFiles() {
+        List<Path> fromAssets = listTitleFiles(Path.of("assets/titles"));
+        if (!fromAssets.isEmpty()) {
+            return fromAssets;
+        }
+        return listTitleFiles(Path.of("../assets/titles"));
+    }
+
+    private static List<Path> listTitleFiles(Path dir) {
+        if (!Files.isDirectory(dir)) {
+            return List.of();
+        }
+        try (Stream<Path> stream = Files.list(dir)) {
+            return stream
+                    .filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().startsWith("ascii_title_"))
+                    .filter(path -> path.getFileName().toString().endsWith(".txt"))
+                    .toList();
+        } catch (IOException e) {
+            return List.of();
+        }
+    }
+
+    private static void trimTrailingEmptyLines(List<String> lines) {
+        int last = lines.size() - 1;
+        while (last >= 0 && lines.get(last).trim().isEmpty()) {
+            lines.remove(last);
+            last--;
+        }
     }
 
     private static class CMatrixEffect {
