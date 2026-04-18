@@ -80,7 +80,8 @@ cd AlgoBlock
 | **启动游戏** | `./gradlew :game-gl:run`       | 直接启动图形界面进行调试            |
 | **打包程序** | `./gradlew :game-gl:shadowJar` | 生成包含所有依赖的可执行 `jar` 文件 |
 
-> **提示**：使用 `shadowJar` 打包成功后，可通过以下命令独立运行游戏：
+> 使用 `shadowJar` 打包成功后，可通过以下命令独立运行游戏：
+>
 > `java -jar game-gl/build/libs/game-gl-0.1.0-all.jar`
 
 ## 开源许可

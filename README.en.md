@@ -80,7 +80,8 @@ cd AlgoBlock
 | **Start Game**  | `./gradlew :game-gl:run`       | Directly starts the graphical interface for debugging          |
 | **Package App** | `./gradlew :game-gl:shadowJar` | Generates an executable `jar` file containing all dependencies |
 
-> **Tip**: After successfully packaging with `shadowJar`, you can run the game independently using the following command:
+> After successfully packaging with `shadowJar`, you can run the game independently using the following command:
+>
 > `java -jar game-gl/build/libs/game-gl-0.1.0-all.jar`
 
 ## License
