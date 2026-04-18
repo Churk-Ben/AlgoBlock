@@ -28,6 +28,7 @@ dependencies {
     implementation("org.lwjgl:lwjgl-glfw:$lwjglVersion")
     implementation("org.lwjgl:lwjgl-opengl:$lwjglVersion")
     implementation("org.lwjgl:lwjgl-stb:$lwjglVersion")
+    implementation("javazoom:jlayer:1.0.1")
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:1.10.2")
     runtimeOnly("org.lwjgl:lwjgl:$lwjglVersion:$lwjglNatives")
@@ -38,12 +39,4 @@ dependencies {
 
 application {
     mainClass.set("com.algoblock.gl.Main")
-}
-
-sourceSets {
-    main {
-        resources {
-            srcDir(project.rootProject.file("assets"))
-        }
-    }
 }

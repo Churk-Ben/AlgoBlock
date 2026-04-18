@@ -21,6 +21,14 @@ public class KeyMapper {
         return key == 262;
     }
 
+    public static boolean isUp(int key) {
+        return key == 265;
+    }
+
+    public static boolean isDown(int key) {
+        return key == 264;
+    }
+
     public static boolean isDelete(int key) {
         return key == 261;
     }

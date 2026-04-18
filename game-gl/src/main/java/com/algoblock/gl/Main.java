@@ -7,6 +7,8 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_F2;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_F3;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_UP;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_DOWN;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_TAB;
 import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
 import static org.lwjgl.glfw.GLFW.GLFW_REPEAT;
@@ -48,14 +50,15 @@ import com.algoblock.gl.renderer.FontDiagnosticTestPattern;
 import com.algoblock.gl.renderer.RenderFrame;
 import com.algoblock.gl.renderer.TerminalBuffer;
 import com.algoblock.gl.renderer.TextRenderer;
-import com.algoblock.gl.ui.Completer;
-import com.algoblock.gl.ui.tea.UiModel;
-import com.algoblock.gl.ui.tea.UiMsg;
-import com.algoblock.gl.ui.tea.UiRuntime;
-import com.algoblock.gl.ui.tea.UiUpdate;
-import com.algoblock.gl.ui.tea.UiView;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import com.algoblock.gl.services.CompletionService;
+import com.algoblock.gl.ui.app.AppCmd;
+import com.algoblock.gl.ui.app.AppCmdHandler;
+import com.algoblock.gl.ui.app.AppModel;
+import com.algoblock.gl.ui.app.AppMsg;
+import com.algoblock.gl.ui.app.AppProgram;
+import com.algoblock.gl.ui.pages.GamePage;
+import com.algoblock.gl.ui.pages.StartPage;
+import com.algoblock.gl.ui.tea.TeaRuntime;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.lwjgl.system.MemoryStack;
@@ -86,13 +89,13 @@ public class Main {
         TerminalBuffer fontDiagBuffer = new TerminalBuffer(120, 40);
         BlockRegistry registry = new BlockRegistry();
         GameCoreService service = new GameCoreService(registry);
-        UiUpdate update = new UiUpdate(new Completer(registry));
-        UiView view = new UiView();
-        UiRuntime uiRuntime = new UiRuntime(
-                update,
-                view,
-                service,
-                UiModel.initial(level1, System.currentTimeMillis() / 1000));
+
+        StartPage startPage = new StartPage();
+        GamePage gamePage = new GamePage(new CompletionService(registry));
+        AppProgram program = new AppProgram(startPage, gamePage, level1);
+        AppCmdHandler cmdHandler = new AppCmdHandler(service);
+
+        TeaRuntime<AppModel, AppMsg, AppCmd> uiRuntime = new TeaRuntime<>(program, cmdHandler);
         DisplayTestPattern displayTestPattern = new DisplayTestPattern();
         FontDiagnosticTestPattern fontDiagnosticPattern = new FontDiagnosticTestPattern();
         AtomicBoolean displayTestMode = new AtomicBoolean(hasDisplayTestArg(args));
@@ -126,6 +129,8 @@ public class Main {
                         || key == GLFW_KEY_TAB
                         || key == GLFW_KEY_LEFT
                         || key == GLFW_KEY_RIGHT
+                        || key == GLFW_KEY_UP
+                        || key == GLFW_KEY_DOWN
                         || key == GLFW_KEY_DELETE) {
                     eventQueue.offer(new KeyEvent(key, action, mods));
                 }
@@ -137,9 +142,9 @@ public class Main {
                 try {
                     InputEvent event = eventQueue.take();
                     if (event instanceof CharEvent c) {
-                        uiRuntime.dispatch(new UiMsg.CharTyped(c.value()));
+                        uiRuntime.dispatch(new AppMsg.CharTyped(c.value()));
                     } else if (event instanceof KeyEvent k) {
-                        uiRuntime.dispatch(new UiMsg.KeyPressed(k.key()));
+                        uiRuntime.dispatch(new AppMsg.KeyPressed(k.key()));
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -201,15 +206,7 @@ public class Main {
     }
 
     private static String resolveFontPath() {
-        Path p1 = Path.of("assets/fonts/MapleMono-NF-CN-unhinted/MapleMono-NF-CN-Regular.ttf");
-        if (Files.exists(p1)) {
-            return p1.toString();
-        }
-        Path p2 = Path.of("../assets/fonts/MapleMono-NF-CN-unhinted/MapleMono-NF-CN-Regular.ttf");
-        if (Files.exists(p2)) {
-            return p2.toString();
-        }
-        return "fonts/MapleMono-NF-CN-unhinted/MapleMono-NF-CN-Regular.ttf";
+        return "assets/fonts/MapleMono-NF-CN-unhinted/MapleMono-NF-CN-Regular.ttf";
     }
 
     private static boolean hasDisplayTestArg(String[] args) {

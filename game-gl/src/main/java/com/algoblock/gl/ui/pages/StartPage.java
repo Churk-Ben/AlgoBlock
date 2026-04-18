@@ -1,21 +1,19 @@
-package com.algoblock.gl.ui.tea;
+package com.algoblock.gl.ui.pages;
 
-import com.algoblock.core.engine.SubmissionResult;
+import com.algoblock.gl.input.KeyMapper;
 import com.algoblock.gl.renderer.RenderFrame;
 import com.algoblock.gl.renderer.TerminalBuffer;
-import com.algoblock.gl.ui.SyntaxHighlighter;
+import com.algoblock.gl.ui.tea.Program;
+import com.algoblock.gl.ui.tea.UpdateResult;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Random;
-import java.util.stream.Stream;
 
-public class UiView {
+public class StartPage implements Program<StartPage.Model, StartPage.Msg, StartPage.Cmd> {
+
     private static final int BG = 0x0D1117;
-    private static final int FG = 0xCDD9E5;
-    private final SyntaxHighlighter highlighter = new SyntaxHighlighter();
     private final CMatrixEffect cmatrix = new CMatrixEffect();
     private final String[] titleArt = loadRandomTitleArt();
 
@@ -27,64 +25,39 @@ public class UiView {
             "            |_____|                                    "
     };
 
-    public RenderFrame render(UiModel model, TerminalBuffer buffer, long nowMillis) {
-        buffer.clear();
-
-        if (model.screen() == UiModel.Screen.START) {
-            return renderStartScreen(buffer, nowMillis);
+    public record Model() {
+        public static Model init() {
+            return new Model();
         }
-
-        buffer.print(0, 0, "Level " + model.level().id() + " - " + model.level().title(), 0x6CB6FF, BG);
-        buffer.print(0, 1, model.level().story(), 0x9FB3C8, BG);
-        buffer.print(0, 3, "> ", FG, BG);
-        highlighter.highlight(buffer, 2, 3, model.line());
-
-        int row = 5;
-        for (String suggestion : model.suggestions().stream().limit(6).toList()) {
-            if (row >= buffer.rows()) {
-                break;
-            }
-            buffer.print(0, row++, suggestion, 0x3FB950, BG);
-        }
-
-        SubmissionResult lastResult = model.lastResult();
-        if (lastResult != null) {
-            if (7 < buffer.rows()) {
-                int color = lastResult.accepted() ? 0x3FB950 : 0xFF7B72;
-                buffer.print(0, 7, "Result: " + lastResult.message(), color, BG);
-            }
-            if (8 < buffer.rows()) {
-                buffer.print(0, 8, "Stars: " + lastResult.score().stars(), 0xE3B341, BG);
-            }
-        }
-
-        int cursorCol = Math.min(buffer.cols() - 1, Math.max(0, 2 + visualOffset(model.line(), model.cursorIndex())));
-        int cursorRow = Math.min(buffer.rows() - 1, 3);
-        boolean forceSolidVisible = nowMillis < model.cursorSolidUntilMillis();
-        boolean blinkVisible = forceSolidVisible || ((nowMillis / 500L) % 2L) == 0L;
-        return new RenderFrame(buffer, cursorCol, cursorRow, blinkVisible, true, 0x79C0FF, 0.20f);
     }
 
-    private static int visualOffset(String line, int cursorIndex) {
-        int max = Math.max(0, Math.min(cursorIndex, line.length()));
-        int width = 0;
-        for (int i = 0; i < max; i++) {
-            width += isWideCodePoint(line.charAt(i)) ? 2 : 1;
+    public sealed interface Msg {
+        record KeyPressed(int key) implements Msg {
         }
-        return width;
     }
 
-    private static boolean isWideCodePoint(int codePoint) {
-        return (codePoint >= 0x1100 && codePoint <= 0x115F)
-                || (codePoint >= 0x2E80 && codePoint <= 0xA4CF)
-                || (codePoint >= 0xAC00 && codePoint <= 0xD7A3)
-                || (codePoint >= 0xF900 && codePoint <= 0xFAFF)
-                || (codePoint >= 0xFE10 && codePoint <= 0xFE6F)
-                || (codePoint >= 0xFF00 && codePoint <= 0xFF60)
-                || (codePoint >= 0xFFE0 && codePoint <= 0xFFE6);
+    public sealed interface Cmd {
+        record StartGame() implements Cmd {
+        }
     }
 
-    private RenderFrame renderStartScreen(TerminalBuffer buffer, long nowMillis) {
+    @Override
+    public Model init() {
+        return Model.init();
+    }
+
+    @Override
+    public UpdateResult<Model, Cmd> update(Model model, Msg msg) {
+        if (msg instanceof Msg.KeyPressed keyPressed) {
+            if (KeyMapper.isSubmit(keyPressed.key())) {
+                return new UpdateResult<>(model, List.of(new Cmd.StartGame()));
+            }
+        }
+        return new UpdateResult<>(model, List.of());
+    }
+
+    @Override
+    public RenderFrame view(Model model, TerminalBuffer buffer, long nowMillis) {
         cmatrix.update(buffer.cols(), buffer.rows(), nowMillis);
         cmatrix.render(buffer);
 
@@ -115,15 +88,23 @@ public class UiView {
         return new RenderFrame(buffer, -1, -1, false, false, 0, 0f);
     }
 
-    private static String[] loadRandomTitleArt() {
-        List<Path> titleFiles = findTitleFiles();
-        if (titleFiles.isEmpty()) {
-            return FALLBACK_TITLE_ART;
-        }
+    private static final String[] TITLE_RESOURCES = {
+            "/assets/titles/ascii_title_ansi_shadow.txt",
+            "/assets/titles/ascii_title_chunky.txt",
+            "/assets/titles/ascii_title_dos_rebel.txt",
+            "/assets/titles/ascii_title_graffiti.txt",
+            "/assets/titles/ascii_title_nscript.txt",
+            "/assets/titles/ascii_title_rectangles.txt"
+    };
 
-        Path selected = titleFiles.get(new Random().nextInt(titleFiles.size()));
-        try {
-            List<String> lines = Files.readAllLines(selected, StandardCharsets.UTF_8);
+    private static String[] loadRandomTitleArt() {
+        String selected = TITLE_RESOURCES[new Random().nextInt(TITLE_RESOURCES.length)];
+        try (java.io.InputStream is = StartPage.class.getResourceAsStream(selected)) {
+            if (is == null) {
+                return FALLBACK_TITLE_ART;
+            }
+            List<String> lines = new java.util.ArrayList<>(
+                    List.of(new String(is.readAllBytes(), StandardCharsets.UTF_8).split("\r?\n")));
             trimTrailingEmptyLines(lines);
             if (lines.isEmpty()) {
                 return FALLBACK_TITLE_ART;
@@ -131,29 +112,6 @@ public class UiView {
             return lines.toArray(String[]::new);
         } catch (IOException e) {
             return FALLBACK_TITLE_ART;
-        }
-    }
-
-    private static List<Path> findTitleFiles() {
-        List<Path> fromAssets = listTitleFiles(Path.of("assets/titles"));
-        if (!fromAssets.isEmpty()) {
-            return fromAssets;
-        }
-        return listTitleFiles(Path.of("../assets/titles"));
-    }
-
-    private static List<Path> listTitleFiles(Path dir) {
-        if (!Files.isDirectory(dir)) {
-            return List.of();
-        }
-        try (Stream<Path> stream = Files.list(dir)) {
-            return stream
-                    .filter(Files::isRegularFile)
-                    .filter(path -> path.getFileName().toString().startsWith("ascii_title_"))
-                    .filter(path -> path.getFileName().toString().endsWith(".txt"))
-                    .toList();
-        } catch (IOException e) {
-            return List.of();
         }
     }
 
@@ -182,7 +140,7 @@ public class UiView {
                 drops = new Drop[cols];
                 for (int i = 0; i < cols; i++) {
                     drops[i] = createDrop(rows);
-                    drops[i].y = random.nextInt(rows); // random initial positions
+                    drops[i].y = random.nextInt(rows);
                 }
             }
 
@@ -197,7 +155,6 @@ public class UiView {
                 if (drop.y - drop.length > rows) {
                     drops[i] = createDrop(rows);
                 }
-                // Randomly change some characters
                 if (random.nextFloat() < 0.1f) {
                     drop.chars[random.nextInt(drop.length)] = getRandomChar();
                 }
@@ -215,7 +172,7 @@ public class UiView {
                     if (y >= 0 && y < rows) {
                         int color = (j == 0) ? 0xFFFFFF : 0x00FF00;
                         if (j > drop.length - 3) {
-                            color = 0x008800; // fade out tail
+                            color = 0x008800;
                         }
                         buffer.print(i, y, String.valueOf(drop.chars[j]), color, BG);
                     }
@@ -236,7 +193,6 @@ public class UiView {
         }
 
         private char getRandomChar() {
-            // Select a random character from the set of glyphs
             final String glyphs = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
             return glyphs.charAt(random.nextInt(glyphs.length()));
         }

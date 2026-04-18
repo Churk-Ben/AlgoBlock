@@ -1,4 +1,4 @@
-package com.algoblock.gl.ui;
+package com.algoblock.gl.services;
 
 import com.algoblock.api.BlockMeta;
 import com.algoblock.core.engine.BlockRegistry;
@@ -6,10 +6,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
-public class Completer {
+public class CompletionService {
     private final BlockRegistry registry;
 
-    public Completer(BlockRegistry registry) {
+    public CompletionService(BlockRegistry registry) {
         this.registry = registry;
     }
 
