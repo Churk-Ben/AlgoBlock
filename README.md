@@ -2,6 +2,8 @@
 
 中文 | [English](README.en.md)
 
+![AlgoBlock 游戏截图](./readme.assets/banner.png)
+
 ## 项目介绍
 
 AlgoBlock 是一款声明式序列变换谜题游戏。玩家通过嵌套组合“积木”编写表达式，将给定的整数序列变换为目标序列，从而完成关卡挑战。

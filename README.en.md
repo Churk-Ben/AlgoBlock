@@ -2,6 +2,8 @@
 
 [中文](README.md) | English
 
+![AlgoBlock Game Screenshot](./readme.assets/banner.png)
+
 ## Introduction
 
 AlgoBlock is a declarative sequence transformation puzzle game. Players solve level challenges by nesting and combining "blocks" to write expressions that transform a given integer sequence into a target sequence.
