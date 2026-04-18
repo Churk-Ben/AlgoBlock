@@ -2,7 +2,7 @@
 
 [中文](README.md) | English
 
-![AlgoBlock Game Screenshot](./readme.assets/banner.png)
+![AlgoBlock Game Screenshot](./assets/banner.png)
 
 ## Introduction
 

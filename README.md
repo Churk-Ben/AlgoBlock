@@ -2,7 +2,7 @@
 
 中文 | [English](README.en.md)
 
-![AlgoBlock 游戏截图](./readme.assets/banner.png)
+![AlgoBlock 游戏截图](./assets/banner.png)
 
 ## 项目介绍
 
