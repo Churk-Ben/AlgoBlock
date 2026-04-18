@@ -31,6 +31,8 @@ To ensure a unified interface and gaming experience, we focus primarily on a cla
 >
 > Reference for the build configuration and important dependency versions used on the development machine:
 >
+> Gradle will automatically download the required dependencies during the first run. (A good network connection is required)
+>
 > - **Java Version**: JDK 21
 > - **Gradle Version**: 8.9
 > - **Shadow Plugin Version**: 9.3.1
@@ -51,8 +53,6 @@ cd AlgoBlock
 # 3. Run the game GUI
 ./gradlew :game-gl:run
 ```
-
----
 
 > [!NOTE]
 >
