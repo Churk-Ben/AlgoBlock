@@ -45,4 +45,64 @@ public class PanelComponent {
             buffer.print(titleX, y, title, titleFg, bg);
         }
     }
+
+    /**
+     * Draws left-aligned options within a panel, reserving space on the left for a
+     * cursor.
+     * The entire block of options is centered horizontally within the specified box
+     * width,
+     * but the text itself is left-aligned (baseline alignment).
+     * Useful for tab menus or settings lists.
+     *
+     * @param buffer              The terminal buffer to draw on.
+     * @param boxX                The X coordinate of the box's left border.
+     * @param boxWidth            The total width of the box.
+     * @param startY              The Y coordinate where the first option will be
+     *                            drawn.
+     * @param options             The list of string options to display.
+     * @param selectedIndex       The index of the currently selected option.
+     * @param lineSpacing         The vertical spacing between options (e.g., 1 for
+     *                            no gap, 2 for one blank line).
+     * @param cursorReservedSpace The number of columns to reserve on the left for
+     *                            the cursor (e.g., 2).
+     * @param normalFg            The foreground color for unselected options.
+     * @param selectedFg          The foreground color for the selected option.
+     * @param bg                  The background color for all options.
+     * @return an array containing {cursorCol, cursorRow} of the currently selected
+     *         option.
+     */
+    public static int[] drawLeftAlignedOptions(TerminalBuffer buffer, int boxX, int boxWidth, int startY,
+            String[] options, int selectedIndex, int lineSpacing, int cursorReservedSpace,
+            int normalFg, int selectedFg, int bg) {
+        int cursorCol = -1;
+        int cursorRow = -1;
+
+        // Calculate maximum option length to center the left-aligned block
+        int maxOptLen = 0;
+        for (String opt : options) {
+            maxOptLen = Math.max(maxOptLen, opt.length());
+        }
+
+        // Total width of the text block = reserved space for cursor + max text length
+        int blockWidth = cursorReservedSpace + maxOptLen;
+        // Start X for the entire block (centered within the box)
+        int blockStartX = boxX + (boxWidth - blockWidth) / 2;
+        // The text starts after the reserved space
+        int textStartX = blockStartX + cursorReservedSpace;
+
+        for (int i = 0; i < options.length; i++) {
+            String text = options[i];
+            int textRow = startY + i * lineSpacing;
+
+            if (i == selectedIndex) {
+                buffer.print(textStartX, textRow, text, selectedFg, bg);
+                cursorCol = blockStartX; // Position cursor in the reserved space
+                cursorRow = textRow;
+            } else {
+                buffer.print(textStartX, textRow, text, normalFg, bg);
+            }
+        }
+
+        return new int[] { cursorCol, cursorRow };
+    }
 }

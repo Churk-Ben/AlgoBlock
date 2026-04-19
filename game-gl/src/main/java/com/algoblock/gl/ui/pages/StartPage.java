@@ -107,22 +107,11 @@ public class StartPage implements Program<StartPage.Model, StartPage.Msg, StartP
 
         com.algoblock.gl.ui.components.PanelComponent.drawBox(buffer, boxX, boxY, boxWidth, boxHeight, 0x555555, BG);
 
-        int cursorCol = -1;
-        int cursorRow = -1;
+        int[] cursorInfo = com.algoblock.gl.ui.components.PanelComponent.drawLeftAlignedOptions(
+                buffer, boxX, boxWidth, optionsStartRow, OPTIONS, model.selectedIndex(), 2, 2, 0x888888, 0xEEEEEE, BG);
 
-        for (int i = 0; i < OPTIONS.length; i++) {
-            String text = OPTIONS[i];
-            int textCol = (cols - text.length()) / 2;
-            int textRow = optionsStartRow + i * 2;
-
-            if (i == model.selectedIndex()) {
-                buffer.print(Math.max(0, textCol), textRow, text, 0xEEEEEE, BG);
-                cursorCol = Math.max(0, textCol - 2);
-                cursorRow = textRow;
-            } else {
-                buffer.print(Math.max(0, textCol), textRow, text, 0x888888, BG);
-            }
-        }
+        int cursorCol = cursorInfo[0];
+        int cursorRow = cursorInfo[1];
 
         GlitchState glitch = glitchEffect.update(nowMillis);
         List<UiEffect> effects = new java.util.ArrayList<>();
