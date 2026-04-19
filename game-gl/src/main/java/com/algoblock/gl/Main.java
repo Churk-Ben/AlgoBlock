@@ -21,7 +21,6 @@ import static org.lwjgl.glfw.GLFW.glfwGetTime;
 import static org.lwjgl.glfw.GLFW.glfwGetFramebufferSize;
 import static org.lwjgl.glfw.GLFW.glfwInit;
 import static org.lwjgl.glfw.GLFW.glfwMakeContextCurrent;
-import static org.lwjgl.glfw.GLFW.glfwPollEvents;
 import static org.lwjgl.glfw.GLFW.glfwSetCharCallback;
 import static org.lwjgl.glfw.GLFW.glfwSetKeyCallback;
 import static org.lwjgl.glfw.GLFW.glfwSetWindowTitle;
@@ -43,13 +42,13 @@ import com.algoblock.gl.input.InputEvent;
 import com.algoblock.gl.input.InputEventQueue;
 import com.algoblock.gl.input.KeyEvent;
 import com.algoblock.gl.renderer.CursorRenderer;
-import com.algoblock.gl.renderer.DisplayTestPattern;
 import com.algoblock.gl.renderer.EffectsRenderer;
 import com.algoblock.gl.renderer.FontAtlas;
-import com.algoblock.gl.renderer.FontDiagnosticTestPattern;
 import com.algoblock.gl.renderer.RenderFrame;
 import com.algoblock.gl.renderer.TerminalBuffer;
 import com.algoblock.gl.renderer.TextRenderer;
+import com.algoblock.gl.renderer.test.DisplayTestPattern;
+import com.algoblock.gl.renderer.test.FontDiagnosticTestPattern;
 import com.algoblock.gl.services.CompletionService;
 import com.algoblock.gl.ui.app.AppCmd;
 import com.algoblock.gl.ui.app.AppCmdHandler;
@@ -61,6 +60,7 @@ import com.algoblock.gl.ui.pages.StartPage;
 import com.algoblock.gl.ui.tea.TeaRuntime;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
@@ -78,15 +78,25 @@ public class Main {
         if (window == 0L) {
             throw new IllegalStateException("Failed to create window");
         }
-        glfwMakeContextCurrent(window);
-        glfwSwapInterval(1);
-        GL.createCapabilities();
+
+        AtomicInteger fbWidth = new AtomicInteger(1280);
+        AtomicInteger fbHeight = new AtomicInteger(720);
+        // Read initial size
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            var w = stack.mallocInt(1);
+            var h = stack.mallocInt(1);
+            glfwGetFramebufferSize(window, w, h);
+            fbWidth.set(w.get(0));
+            fbHeight.set(h.get(0));
+        }
+
+        org.lwjgl.glfw.GLFW.glfwSetFramebufferSizeCallback(window, (w, width, height) -> {
+            fbWidth.set(width);
+            fbHeight.set(height);
+        });
 
         LevelLoader levelLoader = new LevelLoader();
         Level level1 = levelLoader.loadFromResource("/levels/level-1.json");
-        TerminalBuffer uiBuffer = new TerminalBuffer(120, 40);
-        TerminalBuffer displayTestBuffer = new TerminalBuffer(120, 40);
-        TerminalBuffer fontDiagBuffer = new TerminalBuffer(120, 40);
         BlockRegistry registry = new BlockRegistry();
         GameCoreService service = new GameCoreService(registry);
 
@@ -100,11 +110,6 @@ public class Main {
         FontDiagnosticTestPattern fontDiagnosticPattern = new FontDiagnosticTestPattern();
         AtomicBoolean displayTestMode = new AtomicBoolean(hasDisplayTestArg(args));
         AtomicBoolean fontDiagMode = new AtomicBoolean(hasFontDiagArg(args));
-        FontAtlas fontAtlas = new FontAtlas(resolveFontPath(), 24, 1024, 1024);
-        TextRenderer textRenderer = new TextRenderer(fontAtlas);
-        CursorRenderer cursorRenderer = new CursorRenderer();
-        EffectsRenderer effectsRenderer = new EffectsRenderer();
-        textRenderer.setFontDiagnosticMode(fontDiagMode.get());
         InputEventQueue eventQueue = new InputEventQueue();
 
         if (fontDiagMode.get()) {
@@ -120,7 +125,6 @@ public class Main {
                 }
                 if (key == GLFW_KEY_F3 && action == GLFW_PRESS) {
                     fontDiagMode.set(!fontDiagMode.get());
-                    textRenderer.setFontDiagnosticMode(fontDiagMode.get());
                     System.out.println("[FONT-DIAG] mode=" + (fontDiagMode.get() ? "ON" : "OFF"));
                     return;
                 }
@@ -155,49 +159,74 @@ public class Main {
         logicThread.setDaemon(true);
         logicThread.start();
 
+        Thread renderThread = new Thread(() -> {
+            glfwMakeContextCurrent(window);
+            glfwSwapInterval(1);
+            GL.createCapabilities();
+
+            TerminalBuffer uiBuffer = new TerminalBuffer(120, 40);
+            TerminalBuffer displayTestBuffer = new TerminalBuffer(120, 40);
+            TerminalBuffer fontDiagBuffer = new TerminalBuffer(120, 40);
+
+            FontAtlas fontAtlas = new FontAtlas(resolveFontPath(), 24, 1024, 1024);
+            TextRenderer textRenderer = new TextRenderer(fontAtlas);
+            CursorRenderer cursorRenderer = new CursorRenderer();
+            EffectsRenderer effectsRenderer = new EffectsRenderer();
+
+            while (!glfwWindowShouldClose(window)) {
+                textRenderer.setFontDiagnosticMode(fontDiagMode.get());
+
+                int viewportW = fbWidth.get();
+                int viewportH = fbHeight.get();
+                if (viewportW > 0 && viewportH > 0) {
+                    textRenderer.setViewport(viewportW, viewportH);
+                    int dynamicCols = textRenderer.visibleCols();
+                    int dynamicRows = textRenderer.visibleRows();
+                    if (uiBuffer.cols() != dynamicCols || uiBuffer.rows() != dynamicRows) {
+                        uiBuffer = new TerminalBuffer(dynamicCols, dynamicRows);
+                    }
+                    if (displayTestBuffer.cols() != dynamicCols || displayTestBuffer.rows() != dynamicRows) {
+                        displayTestBuffer = new TerminalBuffer(dynamicCols, dynamicRows);
+                    }
+                    if (fontDiagBuffer.cols() != dynamicCols || fontDiagBuffer.rows() != dynamicRows) {
+                        fontDiagBuffer = new TerminalBuffer(dynamicCols, dynamicRows);
+                    }
+
+                    glClearColor(0.05f, 0.07f, 0.09f, 1f);
+                    glClear(GL_COLOR_BUFFER_BIT);
+                    TerminalBuffer renderBuffer;
+                    RenderFrame uiFrame = null;
+                    if (displayTestMode.get()) {
+                        uiFrame = displayTestPattern.renderTo(displayTestBuffer, glfwGetTime());
+                        renderBuffer = displayTestBuffer;
+                    } else if (fontDiagMode.get()) {
+                        fontDiagnosticPattern.renderTo(fontDiagBuffer, glfwGetTime());
+                        renderBuffer = fontDiagBuffer;
+                    } else {
+                        uiFrame = uiRuntime.render(uiBuffer, System.currentTimeMillis());
+                        renderBuffer = uiFrame.textBuffer();
+                    }
+                    textRenderer.upload(renderBuffer);
+                    textRenderer.draw();
+                    if (uiFrame != null) {
+                        cursorRenderer.draw(uiFrame, textRenderer, glfwGetTime());
+                        effectsRenderer.draw(uiFrame, textRenderer, glfwGetTime());
+                    }
+                    glfwSwapBuffers(window);
+                }
+            }
+        }, "game-render");
+        renderThread.start();
+
         while (!glfwWindowShouldClose(window)) {
-            try (MemoryStack stack = MemoryStack.stackPush()) {
-                var w = stack.mallocInt(1);
-                var h = stack.mallocInt(1);
-                glfwGetFramebufferSize(window, w, h);
-                int viewportW = w.get(0);
-                int viewportH = h.get(0);
-                textRenderer.setViewport(viewportW, viewportH);
-                int dynamicCols = textRenderer.visibleCols();
-                int dynamicRows = textRenderer.visibleRows();
-                if (uiBuffer.cols() != dynamicCols || uiBuffer.rows() != dynamicRows) {
-                    uiBuffer = new TerminalBuffer(dynamicCols, dynamicRows);
-                }
-                if (displayTestBuffer.cols() != dynamicCols || displayTestBuffer.rows() != dynamicRows) {
-                    displayTestBuffer = new TerminalBuffer(dynamicCols, dynamicRows);
-                }
-                if (fontDiagBuffer.cols() != dynamicCols || fontDiagBuffer.rows() != dynamicRows) {
-                    fontDiagBuffer = new TerminalBuffer(dynamicCols, dynamicRows);
-                }
-            }
-            glClearColor(0.05f, 0.07f, 0.09f, 1f);
-            glClear(GL_COLOR_BUFFER_BIT);
-            TerminalBuffer renderBuffer;
-            RenderFrame uiFrame = null;
-            if (displayTestMode.get()) {
-                uiFrame = displayTestPattern.renderTo(displayTestBuffer, glfwGetTime());
-                renderBuffer = displayTestBuffer;
-            } else if (fontDiagMode.get()) {
-                fontDiagnosticPattern.renderTo(fontDiagBuffer, glfwGetTime());
-                renderBuffer = fontDiagBuffer;
-            } else {
-                uiFrame = uiRuntime.render(uiBuffer, System.currentTimeMillis());
-                renderBuffer = uiFrame.textBuffer();
-            }
-            textRenderer.upload(renderBuffer);
-            textRenderer.draw();
-            if (uiFrame != null) {
-                cursorRenderer.draw(uiFrame, textRenderer, glfwGetTime());
-                effectsRenderer.draw(uiFrame, textRenderer, glfwGetTime());
-            }
+            org.lwjgl.glfw.GLFW.glfwWaitEventsTimeout(0.1);
             glfwSetWindowTitle(window, "AlgoBlock  t=" + String.format("%.1f", glfwGetTime()));
-            glfwSwapBuffers(window);
-            glfwPollEvents();
+        }
+
+        try {
+            renderThread.join();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
 
         uiRuntime.close();
