@@ -7,7 +7,7 @@
   "output": [1, 2, 2, 3, 4, 5],
   "available_blocks": ["Array", "Sort", "_INPUT_"],
   "forced_blocks": ["Sort"],
-  "bonus_combos": ["Array", "Sort"],
+  "bonus_combos": [["Array", "Sort"]],
   "optimal_size": 3,
   "time_par": 35,
   "step_budget": 50000,

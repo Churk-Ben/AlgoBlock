@@ -7,7 +7,7 @@
   "output": [4, 3, 2, 1],
   "available_blocks": ["Array", "Sort", "Reverse", "_INPUT_"],
   "forced_blocks": ["Sort", "Reverse"],
-  "bonus_combos": ["Sort", "Reverse"],
+  "bonus_combos": [["Sort", "Reverse"]],
   "optimal_size": 4,
   "time_par": 40,
   "step_budget": 50000,

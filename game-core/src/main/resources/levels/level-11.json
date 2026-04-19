@@ -7,7 +7,7 @@
   "output": [2, 4, 6],
   "available_blocks": ["Array", "Filter", "EvenPred", "_INPUT_"],
   "forced_blocks": ["Filter", "EvenPred"],
-  "bonus_combos": ["Filter", "EvenPred"],
+  "bonus_combos": [["Filter", "EvenPred"]],
   "optimal_size": 4,
   "time_par": 40,
   "step_budget": 50000,

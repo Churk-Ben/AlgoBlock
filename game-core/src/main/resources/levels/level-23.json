@@ -7,7 +7,7 @@
   "output": [-5, -1, 0, 2, 3],
   "available_blocks": ["Array", "PrioQueue", "PopEach", "_INPUT_"],
   "forced_blocks": ["PrioQueue", "PopEach"],
-  "bonus_combos": ["PrioQueue", "PopEach"],
+  "bonus_combos": [["PrioQueue", "PopEach"]],
   "optimal_size": 4,
   "time_par": 40,
   "step_budget": 50000,

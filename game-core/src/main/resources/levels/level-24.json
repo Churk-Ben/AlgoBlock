@@ -7,7 +7,7 @@
   "output": [0, 2, 0, 4],
   "available_blocks": ["Array", "Map", "DoubleOp", "_INPUT_"],
   "forced_blocks": ["Map", "DoubleOp"],
-  "bonus_combos": ["Map", "DoubleOp"],
+  "bonus_combos": [["Map", "DoubleOp"]],
   "optimal_size": 4,
   "time_par": 40,
   "step_budget": 50000,
