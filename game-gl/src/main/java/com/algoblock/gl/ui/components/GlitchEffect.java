@@ -1,6 +1,6 @@
 package com.algoblock.gl.ui.components;
 
-import com.algoblock.gl.renderer.GlitchState;
+import com.algoblock.gl.renderer.effect.GlitchState;
 
 public class GlitchEffect {
     private double nextGlitchEvalTime = 0;
@@ -13,6 +13,24 @@ public class GlitchEffect {
     private float glitchY2 = 0;
     private float glitchH2 = 0;
 
+    // Glitch timing parameters
+    private final double glitchEvaluationInterval = 0.5;
+    private final float glitchProbability = 0.8f;
+    private final float glitchMinDuration = 0.1f;
+    private final float glitchMaxDuration = 0.15f;
+
+    // First glitch strip parameters
+    private final float glitch1MinHeight = 0.02f;
+    private final float glitch1MaxHeight = 0.05f;
+    private final float glitch1MaxOffset = 60.0f;
+    private final float glitch1MinOffset = -30.0f;
+
+    // Second glitch strip parameters
+    private final float glitch2MinHeight = 0.01f;
+    private final float glitch2MaxHeight = 0.03f;
+    private final float glitch2MaxOffset = 40.0f;
+    private final float glitch2MinOffset = -20.0f;
+
     /**
      * Updates the glitch effect state and returns a GlitchState if active.
      * 
@@ -23,20 +41,18 @@ public class GlitchEffect {
         double timeSeconds = nowMillis / 1000.0;
 
         if (timeSeconds >= nextGlitchEvalTime) {
-            nextGlitchEvalTime = timeSeconds + 1.0;
-            if (Math.random() < 0.5) {
+            nextGlitchEvalTime = timeSeconds + glitchEvaluationInterval;
+            if (Math.random() < glitchProbability) {
                 isGlitching = true;
-                glitchEndTime = timeSeconds + 0.1 + Math.random() * 0.15; // 0.1s ~ 0.25s duration
+                glitchEndTime = timeSeconds + glitchMinDuration + Math.random() * glitchMaxDuration;
 
-                // Normalized coordinates [0.0, 1.0]
                 glitchY1 = (float) Math.random();
-                glitchH1 = 0.02f + (float) Math.random() * 0.05f;
-                glitchOffset1 = (float) (Math.random() * 60 - 30); // Absolute pixel offset is fine, or we can scale it
-                                                                   // later. Let's keep it absolute for now.
+                glitchH1 = glitch1MinHeight + (float) Math.random() * glitch1MaxHeight;
+                glitchOffset1 = (float) (Math.random() * (glitch1MaxOffset - glitch1MinOffset) + glitch1MinOffset);
 
                 glitchY2 = (float) Math.random();
-                glitchH2 = 0.01f + (float) Math.random() * 0.03f;
-                glitchOffset2 = (float) (Math.random() * 40 - 20);
+                glitchH2 = glitch2MinHeight + (float) Math.random() * glitch2MaxHeight;
+                glitchOffset2 = (float) (Math.random() * (glitch2MaxOffset - glitch2MinOffset) + glitch2MinOffset);
             }
         }
 
