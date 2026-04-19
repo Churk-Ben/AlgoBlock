@@ -8,4 +8,7 @@ public sealed interface AppCmd {
 
     record PlaySound(String resourcePath) implements AppCmd {
     }
+
+    record Exit() implements AppCmd {
+    }
 }

@@ -54,6 +54,8 @@ public class AppProgram implements Program<AppModel, AppMsg, AppCmd> {
                                     System.currentTimeMillis() / 1000);
                         } else if (cmd instanceof StartPage.Cmd.OpenDiagnostics) {
                             nextScreen = AppModel.Screen.DIAGNOSTICS;
+                        } else if (cmd instanceof StartPage.Cmd.Exit) {
+                            commands.add(new AppCmd.Exit());
                         }
                     }
                 }

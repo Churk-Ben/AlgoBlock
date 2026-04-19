@@ -37,6 +37,8 @@ public class AppCmdHandler implements CmdHandler<AppCmd, AppMsg> {
                 SubmissionResult result = service.submit(submit.level(), submit.source(), submit.elapsedSeconds());
                 dispatch.accept(new AppMsg.SubmitFinished(result));
             });
+        } else if (cmd instanceof AppCmd.Exit) {
+            System.exit(0);
         } else if (cmd instanceof AppCmd.PlaySound playSound) {
             audioExecutor.submit(() -> {
                 try (InputStream is = getClass().getResourceAsStream(playSound.resourcePath())) {
