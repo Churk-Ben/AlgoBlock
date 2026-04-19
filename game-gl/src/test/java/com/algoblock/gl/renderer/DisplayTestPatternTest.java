@@ -21,16 +21,17 @@ class DisplayTestPatternTest {
         assertEquals('文', buffer.cells()[2].c());
         assertEquals('\0', buffer.cells()[3].c());
 
-        assertEquals(0x101418, buffer.cells()[0].bg());
-        assertEquals(0x101418, buffer.cells()[1].bg());
-        assertEquals(0xD9DEE3, buffer.cells()[2].bg());
-        assertEquals(0xD9DEE3, buffer.cells()[3].bg());
+        assertEquals(0x0D1117, buffer.cells()[0].bg());
+        assertEquals(0x0D1117, buffer.cells()[1].bg());
+        assertEquals(0x555555, buffer.cells()[2].bg());
+        assertEquals(0x555555, buffer.cells()[3].bg());
     }
 
     @Test
     void shouldRotateAllCheckerboardVariants() {
         TerminalBuffer buffer = new TerminalBuffer(4, 1);
         DisplayTestPattern pattern = new DisplayTestPattern();
+        pattern.renderTo(buffer, 0.0); // initialize startTime to 0.0
 
         pattern.renderTo(buffer, 1.2);
         assertEquals('A', buffer.cells()[0].c());
@@ -41,8 +42,8 @@ class DisplayTestPatternTest {
         assertEquals(buffer.cells()[2].bg(), buffer.cells()[3].bg());
 
         pattern.renderTo(buffer, 2.2);
-        assertEquals(0xD9DEE3, buffer.cells()[0].bg());
-        assertEquals(0xD9DEE3, buffer.cells()[1].bg());
+        assertEquals(0x555555, buffer.cells()[0].bg());
+        assertEquals(0x555555, buffer.cells()[1].bg());
         assertEquals('文', buffer.cells()[0].c());
         assertEquals('\0', buffer.cells()[1].c());
         assertEquals('中', buffer.cells()[2].c());
@@ -59,6 +60,7 @@ class DisplayTestPatternTest {
     void shouldRenderSolidRedAndGreenPhases() {
         TerminalBuffer buffer = new TerminalBuffer(3, 2);
         DisplayTestPattern pattern = new DisplayTestPattern();
+        pattern.renderTo(buffer, 0.0); // initialize startTime to 0.0
 
         pattern.renderTo(buffer, 4.2);
         for (TerminalBuffer.Cell cell : buffer.cells()) {
@@ -75,12 +77,13 @@ class DisplayTestPatternTest {
     void shouldReturnCursorFrameForJumpingTest() {
         TerminalBuffer buffer = new TerminalBuffer(5, 5);
         DisplayTestPattern pattern = new DisplayTestPattern();
+        pattern.renderTo(buffer, 0.0); // initialize startTime to 0.0
 
-        RenderFrame frame0 = pattern.renderTo(buffer, 7.1);
+        RenderFrame frame0 = pattern.renderTo(buffer, 8.6);
         assertEquals(1, frame0.cursorCol());
         assertEquals(1, frame0.cursorRow());
 
-        RenderFrame frame1 = pattern.renderTo(buffer, 7.6);
+        RenderFrame frame1 = pattern.renderTo(buffer, 9.1);
         assertEquals(3, frame1.cursorCol());
         assertEquals(1, frame1.cursorRow());
     }
