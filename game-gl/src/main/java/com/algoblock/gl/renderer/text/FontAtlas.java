@@ -292,17 +292,6 @@ public class FontAtlas {
             return;
         }
         debugGlyphLogCount++;
-        String ch = printable(codePoint);
-        System.out.printf(
-                "[FONT-DIAG] #%d cp=U+%04X ch=%s bitmap=%s w=%d h=%d xOff=%d yOff=%d adv=%.2f alphaMax=%d atlasPen=(%d,%d)%n",
-                debugGlyphLogCount, codePoint, ch, hasBitmap, w, h, xOffset, yOffset, advancePx, alphaMax, penX, penY);
-    }
-
-    private static String printable(int codePoint) {
-        if (!Character.isValidCodePoint(codePoint) || Character.isISOControl(codePoint)) {
-            return "<non-print>";
-        }
-        return "'" + new String(Character.toChars(codePoint)) + "'";
     }
 
     private void placeGlyph(int glyphW, int glyphH, int codePoint) {
