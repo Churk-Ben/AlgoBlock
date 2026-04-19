@@ -5,6 +5,7 @@ import com.algoblock.core.levels.Level;
 import com.algoblock.gl.input.KeyMapper;
 import com.algoblock.gl.renderer.RenderFrame;
 import com.algoblock.gl.renderer.TerminalBuffer;
+import com.algoblock.gl.renderer.UiEffect;
 import com.algoblock.gl.services.CompletionService;
 import com.algoblock.gl.ui.SyntaxHighlighter;
 import com.algoblock.gl.ui.components.CompleterComponent;
@@ -219,7 +220,8 @@ public class GamePage implements Program<GamePage.Model, GamePage.Msg, GamePage.
         int cursorRow = Math.min(buffer.rows() - 1, 3);
         boolean forceSolidVisible = nowMillis < model.cursorSolidUntilMillis();
         boolean blinkVisible = forceSolidVisible || ((nowMillis / 500L) % 2L) == 0L;
-        return new RenderFrame(buffer, cursorCol, cursorRow, blinkVisible, true, 0x79C0FF, 0.20f);
+        return new RenderFrame(buffer, cursorCol, cursorRow, blinkVisible, true, 0x79C0FF,
+                List.of(new UiEffect.Crt(0.20f)));
     }
 
     private static int clampCursor(int cursor, int lineLength) {

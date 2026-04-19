@@ -1,5 +1,7 @@
 package com.algoblock.gl.renderer;
 
+import java.util.List;
+
 public record RenderFrame(
         TerminalBuffer textBuffer,
         int cursorCol,
@@ -7,5 +9,5 @@ public record RenderFrame(
         boolean cursorVisible,
         boolean cursorBlockStyle,
         int cursorColor,
-        float effectStrength) {
+        List<UiEffect> effects) {
 }

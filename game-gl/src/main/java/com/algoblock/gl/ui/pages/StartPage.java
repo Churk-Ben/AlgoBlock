@@ -6,6 +6,10 @@ import com.algoblock.gl.renderer.TerminalBuffer;
 import com.algoblock.gl.ui.tea.Program;
 import com.algoblock.gl.ui.tea.UpdateResult;
 
+import com.algoblock.gl.ui.components.GlitchEffect;
+import com.algoblock.gl.renderer.GlitchState;
+import com.algoblock.gl.renderer.UiEffect;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -15,6 +19,7 @@ public class StartPage implements Program<StartPage.Model, StartPage.Msg, StartP
 
     private static final int BG = 0x0D1117;
     private final CMatrixEffect cmatrix = new CMatrixEffect();
+    private final GlitchEffect glitchEffect = new GlitchEffect();
     private final String[] titleArt = loadRandomTitleArt();
 
     private static final String[] FALLBACK_TITLE_ART = {
@@ -85,7 +90,14 @@ public class StartPage implements Program<StartPage.Model, StartPage.Msg, StartP
         int placeholderCol = (cols - placeholderText.length()) / 2;
         buffer.print(Math.max(0, placeholderCol), optionsStartRow + 2, placeholderText, 0x888888, BG);
 
-        return new RenderFrame(buffer, -1, -1, false, false, 0, 0.3f);
+        GlitchState glitch = glitchEffect.update(nowMillis);
+        List<UiEffect> effects = new java.util.ArrayList<>();
+        effects.add(new UiEffect.Crt(0.3f));
+        if (glitch != null) {
+            effects.add(new UiEffect.Glitch(glitch));
+        }
+
+        return new RenderFrame(buffer, -1, -1, false, false, 0, List.copyOf(effects));
     }
 
     private static final String[] TITLE_RESOURCES = {

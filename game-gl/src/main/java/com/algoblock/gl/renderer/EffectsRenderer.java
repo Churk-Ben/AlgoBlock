@@ -19,19 +19,23 @@ import static org.lwjgl.opengl.GL11.glVertex2f;
 import static org.lwjgl.opengl.GL11.glViewport;
 
 public class EffectsRenderer {
-    private double nextGlitchEvalTime = 0;
-    private double glitchEndTime = 0;
-    private boolean isGlitching = false;
-    private float glitchOffset1 = 0;
-    private float glitchOffset2 = 0;
-    private float glitchY1 = 0;
-    private float glitchH1 = 0;
-    private float glitchY2 = 0;
-    private float glitchH2 = 0;
     private int screenTexture = 0;
 
     public void draw(RenderFrame frame, TextRenderer textRenderer, double timeSeconds) {
-        if (frame == null || frame.effectStrength() <= 0f) {
+        if (frame == null || frame.effects() == null || frame.effects().isEmpty()) {
+            return;
+        }
+
+        float crtStrength = 0f;
+        GlitchState glitch = null;
+        for (UiEffect effect : frame.effects()) {
+            if (effect instanceof UiEffect.Crt crt) {
+                crtStrength = Math.max(crtStrength, crt.strength());
+            } else if (effect instanceof UiEffect.Glitch glitchEffect) {
+                glitch = glitchEffect.state();
+            }
+        }
+        if (crtStrength <= 0f && glitch == null) {
             return;
         }
 
@@ -44,72 +48,53 @@ public class EffectsRenderer {
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
 
-        float strength = frame.effectStrength();
-        float animated = (float) ((Math.sin(timeSeconds * 1.7) + 1.0) * 0.5);
-        // Make stripe (scanline) effect more prominent
-        float stripeAlpha = Math.max(0.05f, strength * 0.25f);
-        float vignetteAlpha = Math.max(0.03f, strength * 0.16f) * (0.7f + animated * 0.3f);
-        float stripeStep = Math.max(2f, textRenderer.cellHeightPx() * 0.75f);
+        if (crtStrength > 0f) {
+            float animated = (float) ((Math.sin(timeSeconds * 1.7) + 1.0) * 0.5);
+            // Make stripe (scanline) effect more prominent
+            float stripeAlpha = Math.max(0.05f, crtStrength * 0.25f);
+            float vignetteAlpha = Math.max(0.03f, crtStrength * 0.16f) * (0.7f + animated * 0.3f);
+            float stripeStep = Math.max(2f, textRenderer.cellHeightPx() * 0.75f);
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        glBegin(GL_QUADS);
-        glColor4f(0f, 0f, 0f, stripeAlpha);
-        for (float y = 0; y < viewportHeight; y += stripeStep * 2f) {
-            glVertex2f(0f, y);
-            glVertex2f(viewportWidth, y);
-            glVertex2f(viewportWidth, Math.min(viewportHeight, y + stripeStep));
-            glVertex2f(0f, Math.min(viewportHeight, y + stripeStep));
+            glBegin(GL_QUADS);
+            glColor4f(0f, 0f, 0f, stripeAlpha);
+            for (float y = 0; y < viewportHeight; y += stripeStep * 2f) {
+                glVertex2f(0f, y);
+                glVertex2f(viewportWidth, y);
+                glVertex2f(viewportWidth, Math.min(viewportHeight, y + stripeStep));
+                glVertex2f(0f, Math.min(viewportHeight, y + stripeStep));
+            }
+
+            float edge = Math.max(24f, Math.min(viewportWidth, viewportHeight) * 0.08f);
+            glColor4f(0f, 0f, 0f, vignetteAlpha);
+            glVertex2f(0f, 0f);
+            glVertex2f(viewportWidth, 0f);
+            glVertex2f(viewportWidth, edge);
+            glVertex2f(0f, edge);
+
+            glVertex2f(0f, viewportHeight - edge);
+            glVertex2f(viewportWidth, viewportHeight - edge);
+            glVertex2f(viewportWidth, viewportHeight);
+            glVertex2f(0f, viewportHeight);
+
+            glVertex2f(0f, 0f);
+            glVertex2f(edge, 0f);
+            glVertex2f(edge, viewportHeight);
+            glVertex2f(0f, viewportHeight);
+
+            glVertex2f(viewportWidth - edge, 0f);
+            glVertex2f(viewportWidth, 0f);
+            glVertex2f(viewportWidth, viewportHeight);
+            glVertex2f(viewportWidth - edge, viewportHeight);
+            glEnd();
+
+            glDisable(GL_BLEND);
         }
-
-        float edge = Math.max(24f, Math.min(viewportWidth, viewportHeight) * 0.08f);
-        glColor4f(0f, 0f, 0f, vignetteAlpha);
-        glVertex2f(0f, 0f);
-        glVertex2f(viewportWidth, 0f);
-        glVertex2f(viewportWidth, edge);
-        glVertex2f(0f, edge);
-
-        glVertex2f(0f, viewportHeight - edge);
-        glVertex2f(viewportWidth, viewportHeight - edge);
-        glVertex2f(viewportWidth, viewportHeight);
-        glVertex2f(0f, viewportHeight);
-
-        glVertex2f(0f, 0f);
-        glVertex2f(edge, 0f);
-        glVertex2f(edge, viewportHeight);
-        glVertex2f(0f, viewportHeight);
-
-        glVertex2f(viewportWidth - edge, 0f);
-        glVertex2f(viewportWidth, 0f);
-        glVertex2f(viewportWidth, viewportHeight);
-        glVertex2f(viewportWidth - edge, viewportHeight);
-        glEnd();
-
-        glDisable(GL_BLEND);
 
         // --- Glitch Effect Logic ---
-        if (timeSeconds >= nextGlitchEvalTime) {
-            nextGlitchEvalTime = timeSeconds + 1.0;
-            if (Math.random() < 0.5) {
-                isGlitching = true;
-                glitchEndTime = timeSeconds + 0.1 + Math.random() * 0.15; // 0.1s ~ 0.25s duration
-
-                glitchY1 = (float) Math.random() * viewportHeight;
-                glitchH1 = 10f + (float) Math.random() * 30f;
-                glitchOffset1 = (float) (Math.random() * 60 - 30);
-
-                glitchY2 = (float) Math.random() * viewportHeight;
-                glitchH2 = 5f + (float) Math.random() * 15f;
-                glitchOffset2 = (float) (Math.random() * 40 - 20);
-            }
-        }
-
-        if (isGlitching && timeSeconds > glitchEndTime) {
-            isGlitching = false;
-        }
-
-        if (isGlitching) {
+        if (glitch != null) {
             if (screenTexture == 0) {
                 screenTexture = org.lwjgl.opengl.GL11.glGenTextures();
                 org.lwjgl.opengl.GL11.glBindTexture(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, screenTexture);
@@ -132,8 +117,14 @@ public class EffectsRenderer {
             org.lwjgl.opengl.GL11.glEnable(org.lwjgl.opengl.GL11.GL_TEXTURE_2D);
             org.lwjgl.opengl.GL11.glDisable(org.lwjgl.opengl.GL11.GL_BLEND);
 
-            drawGlitchStrip(viewportWidth, viewportHeight, glitchY1, glitchH1, glitchOffset1);
-            drawGlitchStrip(viewportWidth, viewportHeight, glitchY2, glitchH2, glitchOffset2);
+            // Convert normalized coordinates to pixel coordinates
+            float gy1 = glitch.y1() * viewportHeight;
+            float gh1 = glitch.h1() * viewportHeight;
+            float gy2 = glitch.y2() * viewportHeight;
+            float gh2 = glitch.h2() * viewportHeight;
+
+            drawGlitchStrip(viewportWidth, viewportHeight, gy1, gh1, glitch.offset1());
+            drawGlitchStrip(viewportWidth, viewportHeight, gy2, gh2, glitch.offset2());
 
             org.lwjgl.opengl.GL11.glDisable(org.lwjgl.opengl.GL11.GL_TEXTURE_2D);
         }

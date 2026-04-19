@@ -58,7 +58,7 @@ public class DisplayTestPattern {
             cursorRow = rows - 2; // Bottom-Right
         }
 
-        return new RenderFrame(buffer, cursorCol, cursorRow, true, true, 0x00FF00, 0.0f);
+        return new RenderFrame(buffer, cursorCol, cursorRow, true, true, 0x00FF00, java.util.List.of());
     }
 
     private static double normalize(double t) {
