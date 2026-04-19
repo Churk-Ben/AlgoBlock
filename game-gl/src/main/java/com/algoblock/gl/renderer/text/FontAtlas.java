@@ -1,4 +1,4 @@
-package com.algoblock.gl.renderer;
+package com.algoblock.gl.renderer.text;
 
 import static org.lwjgl.opengl.GL11.GL_NEAREST;
 import static org.lwjgl.opengl.GL11.GL_RGBA;

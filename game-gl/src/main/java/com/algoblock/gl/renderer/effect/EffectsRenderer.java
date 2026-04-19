@@ -1,4 +1,4 @@
-package com.algoblock.gl.renderer;
+package com.algoblock.gl.renderer.effect;
 
 import static org.lwjgl.opengl.GL11.GL_BLEND;
 import static org.lwjgl.opengl.GL11.GL_MODELVIEW;
@@ -17,6 +17,9 @@ import static org.lwjgl.opengl.GL11.glMatrixMode;
 import static org.lwjgl.opengl.GL11.glOrtho;
 import static org.lwjgl.opengl.GL11.glVertex2f;
 import static org.lwjgl.opengl.GL11.glViewport;
+
+import com.algoblock.gl.renderer.core.RenderFrame;
+import com.algoblock.gl.renderer.text.TextRenderer;
 
 public class EffectsRenderer {
     private int screenTexture = 0;

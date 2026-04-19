@@ -1,6 +1,8 @@
-package com.algoblock.gl.renderer;
+package com.algoblock.gl.renderer.core;
 
 import java.util.List;
+
+import com.algoblock.gl.renderer.effect.UiEffect;
 
 public record RenderFrame(
         TerminalBuffer textBuffer,

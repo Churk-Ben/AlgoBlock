@@ -1,10 +1,13 @@
-package com.algoblock.gl.renderer;
+package com.algoblock.gl.renderer.cursor;
 
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.opengl.GL20.*;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+
+import com.algoblock.gl.renderer.core.RenderFrame;
+import com.algoblock.gl.renderer.text.TextRenderer;
 
 public class CursorRenderer {
     private int shaderProgram = 0;

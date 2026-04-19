@@ -1,4 +1,4 @@
-package com.algoblock.gl.renderer;
+package com.algoblock.gl.renderer.core;
 
 import java.util.Arrays;
 

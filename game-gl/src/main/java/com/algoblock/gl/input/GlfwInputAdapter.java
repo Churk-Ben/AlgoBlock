@@ -6,6 +6,10 @@ import static org.lwjgl.glfw.GLFW.glfwSetCharCallback;
 import static org.lwjgl.glfw.GLFW.glfwSetKeyCallback;
 import static org.lwjgl.glfw.GLFW.glfwSetScrollCallback;
 
+import com.algoblock.gl.input.event.CharEvent;
+import com.algoblock.gl.input.event.KeyEvent;
+import com.algoblock.gl.input.event.WheelEvent;
+
 public final class GlfwInputAdapter {
     private final InputEventQueue eventQueue;
 

@@ -1,11 +1,12 @@
 package com.algoblock.gl.input.intent;
 
-import com.algoblock.gl.input.CharEvent;
-import com.algoblock.gl.input.InputEvent;
 import com.algoblock.gl.input.InputKey;
-import com.algoblock.gl.input.KeyEvent;
-import com.algoblock.gl.input.PasteEvent;
-import com.algoblock.gl.input.WheelEvent;
+import com.algoblock.gl.input.event.CharEvent;
+import com.algoblock.gl.input.event.InputEvent;
+import com.algoblock.gl.input.event.KeyEvent;
+import com.algoblock.gl.input.event.PasteEvent;
+import com.algoblock.gl.input.event.WheelEvent;
+
 import java.util.ArrayList;
 import java.util.List;
 
