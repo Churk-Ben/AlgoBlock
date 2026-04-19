@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "id": 14,
+  "title": "排队后转身",
+  "story": "队列保持顺序，Reverse 再整体翻转。",
+  "input": [10, 20, 30, 40],
+  "output": [40, 30, 20, 10],
+  "available_blocks": ["Array", "Queue", "PopEach", "Reverse", "_INPUT_"],
+  "forced_blocks": ["Queue", "Reverse"],
+  "bonus_combos": [
+    ["Queue", "PopEach"],
+    ["Array", "Reverse"]
+  ],
+  "optimal_size": 5,
+  "time_par": 45,
+  "step_budget": 50000,
+  "discovery_hint": "先保序，再翻转。"
+}

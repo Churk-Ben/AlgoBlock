@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "id": 16,
+  "title": "堆后倒序",
+  "story": "先升序，再反向得到降序。",
+  "input": [5, 1, 4, 2, 3],
+  "output": [5, 4, 3, 2, 1],
+  "available_blocks": ["Array", "PrioQueue", "PopEach", "Reverse", "_INPUT_"],
+  "forced_blocks": ["PrioQueue", "PopEach", "Reverse"],
+  "bonus_combos": [
+    ["PrioQueue", "PopEach"],
+    ["Array", "Reverse"]
+  ],
+  "optimal_size": 5,
+  "time_par": 50,
+  "step_budget": 50000,
+  "discovery_hint": "先拿到有序序列，再做方向变换。"
+}

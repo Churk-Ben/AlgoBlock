@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": 9,
+  "title": "队列复习",
+  "story": "FIFO 保持进入时的顺序。",
+  "input": [8, 5, 7, 6],
+  "output": [8, 5, 7, 6],
+  "available_blocks": ["Array", "Queue", "PopEach", "_INPUT_"],
+  "forced_blocks": ["Queue"],
+  "bonus_combos": ["Queue", "PopEach"],
+  "optimal_size": 4,
+  "time_par": 30,
+  "step_budget": 50000,
+  "discovery_hint": "队列会按原顺序吐出元素。"
+}

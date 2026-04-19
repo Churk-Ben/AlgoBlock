@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "id": 28,
+  "title": "双倍后入堆",
+  "story": "先放大数值，再做有序输出。",
+  "input": [7, 1, 5, 2],
+  "output": [2, 4, 10, 14],
+  "available_blocks": ["Array", "Map", "DoubleOp", "PrioQueue", "PopEach", "_INPUT_"],
+  "forced_blocks": ["Map", "DoubleOp", "PrioQueue", "PopEach"],
+  "bonus_combos": [
+    ["Map", "DoubleOp"],
+    ["PrioQueue", "PopEach"]
+  ],
+  "optimal_size": 7,
+  "time_par": 60,
+  "step_budget": 50000,
+  "discovery_hint": "Map 改值，PrioQueue 改全局顺序。"
+}

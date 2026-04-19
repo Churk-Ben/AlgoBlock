@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": 25,
+  "title": "偶数提纯",
+  "story": "只保留目标集合。",
+  "input": [10, 11, 12, 13, 14, 15],
+  "output": [10, 12, 14],
+  "available_blocks": ["Array", "Filter", "EvenPred", "_INPUT_"],
+  "forced_blocks": ["Filter", "EvenPred"],
+  "bonus_combos": ["Filter", "EvenPred"],
+  "optimal_size": 4,
+  "time_par": 40,
+  "step_budget": 50000,
+  "discovery_hint": "EvenPred 会识别所有偶数。"
+}

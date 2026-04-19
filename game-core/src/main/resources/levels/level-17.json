@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "id": 17,
+  "title": "倍增倒放",
+  "story": "Map 之后再 Reverse。",
+  "input": [2, 4, 6],
+  "output": [12, 8, 4],
+  "available_blocks": ["Array", "Map", "DoubleOp", "Reverse", "_INPUT_"],
+  "forced_blocks": ["Map", "DoubleOp", "Reverse"],
+  "bonus_combos": [
+    ["Map", "DoubleOp"],
+    ["Array", "Reverse"]
+  ],
+  "optimal_size": 5,
+  "time_par": 45,
+  "step_budget": 50000,
+  "discovery_hint": "先变值，再变位置。"
+}

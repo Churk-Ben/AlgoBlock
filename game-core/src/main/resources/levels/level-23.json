@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": 23,
+  "title": "堆与负号",
+  "story": "混合正负数做优先排序。",
+  "input": [3, -1, 2, -5, 0],
+  "output": [-5, -1, 0, 2, 3],
+  "available_blocks": ["Array", "PrioQueue", "PopEach", "_INPUT_"],
+  "forced_blocks": ["PrioQueue", "PopEach"],
+  "bonus_combos": ["PrioQueue", "PopEach"],
+  "optimal_size": 4,
+  "time_par": 40,
+  "step_budget": 50000,
+  "discovery_hint": "最小值总会最先弹出。"
+}

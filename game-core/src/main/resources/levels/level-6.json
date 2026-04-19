@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": 6,
+  "title": "重复也要排好",
+  "story": "重复元素也能被稳定地整理。",
+  "input": [4, 2, 2, 5, 1, 3],
+  "output": [1, 2, 2, 3, 4, 5],
+  "available_blocks": ["Array", "Sort", "_INPUT_"],
+  "forced_blocks": ["Sort"],
+  "bonus_combos": ["Array", "Sort"],
+  "optimal_size": 3,
+  "time_par": 35,
+  "step_budget": 50000,
+  "discovery_hint": "Sort 会把相同值放在相邻位置。"
+}

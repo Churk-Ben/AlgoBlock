@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": 20,
+  "title": "带负数降序",
+  "story": "在包含负数时也要稳定处理。",
+  "input": [0, -3, 2, -1, 1],
+  "output": [2, 1, 0, -1, -3],
+  "available_blocks": ["Array", "Sort", "Reverse", "_INPUT_"],
+  "forced_blocks": ["Sort", "Reverse"],
+  "bonus_combos": ["Sort", "Reverse"],
+  "optimal_size": 4,
+  "time_par": 45,
+  "step_budget": 50000,
+  "discovery_hint": "Sort 对负数同样有效。"
+}

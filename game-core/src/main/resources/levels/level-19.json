@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "id": 19,
+  "title": "三段组合",
+  "story": "筛选、倍增、再反转。",
+  "input": [1, 2, 3, 4, 5, 6],
+  "output": [12, 8, 4],
+  "available_blocks": ["Array", "Filter", "EvenPred", "Map", "DoubleOp", "Reverse", "_INPUT_"],
+  "forced_blocks": ["Filter", "EvenPred", "Map", "DoubleOp", "Reverse"],
+  "bonus_combos": [
+    ["Filter", "EvenPred"],
+    ["Map", "DoubleOp"]
+  ],
+  "optimal_size": 7,
+  "time_par": 60,
+  "step_budget": 50000,
+  "discovery_hint": "多步组合时，顺序就是算法。"
+}

@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "id": 30,
+  "title": "终局：组合链",
+  "story": "综合使用筛选、变换与排序。",
+  "input": [12, 3, 7, 8, 5, 2, 9, 4, 11, 6, 10, 1],
+  "output": [24, 20, 16, 12, 8, 4],
+  "available_blocks": ["Array", "Filter", "EvenPred", "Map", "DoubleOp", "Sort", "Reverse", "_INPUT_"],
+  "forced_blocks": ["Filter", "EvenPred", "Map", "DoubleOp", "Sort", "Reverse"],
+  "bonus_combos": [
+    ["Filter", "EvenPred"],
+    ["Map", "DoubleOp"],
+    ["Sort", "Reverse"]
+  ],
+  "optimal_size": 8,
+  "time_par": 70,
+  "step_budget": 50000,
+  "discovery_hint": "先筛偶数，再翻倍，最后做降序。"
+}

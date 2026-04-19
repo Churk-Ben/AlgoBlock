@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": 22,
+  "title": "重复入栈",
+  "story": "观察重复元素的反转结果。",
+  "input": [1, 1, 2, 2, 3],
+  "output": [3, 2, 2, 1, 1],
+  "available_blocks": ["Array", "Stack", "PopEach", "_INPUT_"],
+  "forced_blocks": ["Stack"],
+  "bonus_combos": ["Stack", "PopEach"],
+  "optimal_size": 4,
+  "time_par": 35,
+  "step_budget": 50000,
+  "discovery_hint": "重复值不会影响栈的出入规则。"
+}

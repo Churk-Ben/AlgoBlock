@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "id": 27,
+  "title": "筛选后降序",
+  "story": "筛出偶数后做降序整理。",
+  "input": [9, 2, 8, 1, 6, 3, 4, 5],
+  "output": [8, 6, 4, 2],
+  "available_blocks": ["Array", "Filter", "EvenPred", "Sort", "Reverse", "_INPUT_"],
+  "forced_blocks": ["Filter", "EvenPred", "Sort", "Reverse"],
+  "bonus_combos": [
+    ["Filter", "EvenPred"],
+    ["Sort", "Reverse"]
+  ],
+  "optimal_size": 7,
+  "time_par": 60,
+  "step_budget": 50000,
+  "discovery_hint": "先决定集合，再决定顺序。"
+}

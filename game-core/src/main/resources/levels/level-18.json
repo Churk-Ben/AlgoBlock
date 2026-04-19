@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "id": 18,
+  "title": "偶数回看",
+  "story": "筛选后反转。",
+  "input": [9, 8, 7, 6, 5, 4],
+  "output": [4, 6, 8],
+  "available_blocks": ["Array", "Filter", "EvenPred", "Reverse", "_INPUT_"],
+  "forced_blocks": ["Filter", "EvenPred", "Reverse"],
+  "bonus_combos": [
+    ["Filter", "EvenPred"],
+    ["Array", "Reverse"]
+  ],
+  "optimal_size": 5,
+  "time_par": 50,
+  "step_budget": 50000,
+  "discovery_hint": "Filter 决定“谁留下”，Reverse 决定“谁在前”。"
+}

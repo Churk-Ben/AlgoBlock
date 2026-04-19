@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": 8,
+  "title": "栈的回声",
+  "story": "LIFO 会让顺序翻转。",
+  "input": [2, 4, 1, 3],
+  "output": [3, 1, 4, 2],
+  "available_blocks": ["Array", "Stack", "PopEach", "_INPUT_"],
+  "forced_blocks": ["Stack"],
+  "bonus_combos": ["Stack", "PopEach"],
+  "optimal_size": 4,
+  "time_par": 35,
+  "step_budget": 50000,
+  "discovery_hint": "栈总是最后进去的先出来。"
+}

@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "id": 12,
+  "title": "先筛再倍增",
+  "story": "组合 Filter 与 Map。",
+  "input": [1, 2, 3, 4, 5],
+  "output": [4, 8],
+  "available_blocks": ["Array", "Map", "Filter", "DoubleOp", "EvenPred", "_INPUT_"],
+  "forced_blocks": ["Filter", "EvenPred", "Map", "DoubleOp"],
+  "bonus_combos": [
+    ["Filter", "EvenPred"],
+    ["Map", "DoubleOp"]
+  ],
+  "optimal_size": 6,
+  "time_par": 50,
+  "step_budget": 50000,
+  "discovery_hint": "操作顺序会改变结果。"
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": 26,
+  "title": "栈后再排",
+  "story": "先用栈，再用排序收敛结果。",
+  "input": [6, 1, 5, 2, 4, 3],
+  "output": [1, 2, 3, 4, 5, 6],
+  "available_blocks": ["Array", "Stack", "Sort", "_INPUT_"],
+  "forced_blocks": ["Stack", "Sort"],
+  "bonus_combos": ["Stack", "Sort"],
+  "optimal_size": 5,
+  "time_par": 50,
+  "step_budget": 50000,
+  "discovery_hint": "先扰动，再统一归位。"
+}

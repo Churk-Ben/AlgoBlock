@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": 21,
+  "title": "负数排队",
+  "story": "队列在任何数值上都保持 FIFO。",
+  "input": [-2, 0, -1, 1],
+  "output": [-2, 0, -1, 1],
+  "available_blocks": ["Array", "Queue", "PopEach", "_INPUT_"],
+  "forced_blocks": ["Queue"],
+  "bonus_combos": ["Queue", "PopEach"],
+  "optimal_size": 4,
+  "time_par": 35,
+  "step_budget": 50000,
+  "discovery_hint": "队列关注顺序，不关心大小。"
+}

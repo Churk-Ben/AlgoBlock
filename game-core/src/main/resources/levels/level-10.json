@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "id": 10,
+  "title": "双倍增长",
+  "story": "让每个元素都翻倍。",
+  "input": [1, 3, 5, 7],
+  "output": [2, 6, 10, 14],
+  "available_blocks": ["Array", "Map", "DoubleOp", "_INPUT_"],
+  "forced_blocks": ["Map", "DoubleOp"],
+  "bonus_combos": ["Map", "DoubleOp"],
+  "optimal_size": 4,
+  "time_par": 40,
+  "step_budget": 50000,
+  "discovery_hint": "Map 需要一个函数块作为右侧参数。"
+}
