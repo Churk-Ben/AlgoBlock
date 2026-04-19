@@ -1,6 +1,6 @@
 package com.algoblock.gl.ui.components;
 
-import com.algoblock.gl.renderer.TerminalBuffer;
+import com.algoblock.gl.renderer.core.TerminalBuffer;
 
 public class PanelComponent {
 
