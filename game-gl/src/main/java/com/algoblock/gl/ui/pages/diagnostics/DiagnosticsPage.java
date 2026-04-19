@@ -1,8 +1,8 @@
 package com.algoblock.gl.ui.pages.diagnostics;
 
-import com.algoblock.gl.input.InputKey;
-import com.algoblock.gl.renderer.RenderFrame;
-import com.algoblock.gl.renderer.TerminalBuffer;
+import com.algoblock.gl.input.intent.InputIntent;
+import com.algoblock.gl.renderer.core.RenderFrame;
+import com.algoblock.gl.renderer.core.TerminalBuffer;
 import com.algoblock.gl.ui.tea.Program;
 import com.algoblock.gl.ui.tea.UpdateResult;
 import com.algoblock.gl.ui.components.CMatrixEffect;
@@ -24,10 +24,7 @@ public class DiagnosticsPage implements Program<DiagnosticsPage.Model, Diagnosti
     }
 
     public sealed interface Msg {
-        record KeyPressed(InputKey key) implements Msg {
-        }
-
-        record MouseScrolled(double xoffset, double yoffset) implements Msg {
+        record Intent(InputIntent intent) implements Msg {
         }
     }
 
@@ -48,44 +45,33 @@ public class DiagnosticsPage implements Program<DiagnosticsPage.Model, Diagnosti
 
     @Override
     public UpdateResult<Model, Cmd> update(Model model, Msg msg) {
-        if (msg instanceof Msg.KeyPressed keyPressed) {
-            InputKey key = keyPressed.key();
+        if (msg instanceof Msg.Intent intentMsg) {
+            InputIntent intent = intentMsg.intent();
             if (model.state() == State.MENU) {
-                if (key == InputKey.NAV_UP) {
+                if (intent instanceof InputIntent.NavigatePrev) {
                     int next = model.selectedIndex() - 1;
                     if (next < 0)
                         next = 2;
                     return new UpdateResult<>(new Model(State.MENU, next), List.of());
-                } else if (key == InputKey.NAV_DOWN) {
+                } else if (intent instanceof InputIntent.NavigateNext) {
                     int next = (model.selectedIndex() + 1) % 3;
                     return new UpdateResult<>(new Model(State.MENU, next), List.of());
-                } else if (key == InputKey.SUBMIT) {
+                } else if (intent instanceof InputIntent.Submit) {
                     if (model.selectedIndex() == 0) {
+                        displayTest.reset();
                         return new UpdateResult<>(new Model(State.DISPLAY_TEST, model.selectedIndex()), List.of());
                     } else if (model.selectedIndex() == 1) {
                         return new UpdateResult<>(new Model(State.FONT_DIAGNOSTIC, model.selectedIndex()), List.of());
                     } else if (model.selectedIndex() == 2) {
                         return new UpdateResult<>(model, List.of(new Cmd.ReturnToStart()));
                     }
-                } else if (key == InputKey.CANCEL) {
+                } else if (intent instanceof InputIntent.Cancel) {
                     return new UpdateResult<>(model, List.of(new Cmd.ReturnToStart()));
                 }
             } else {
                 // Inside a test
-                if (key == InputKey.CANCEL || key == InputKey.SUBMIT) {
+                if (intent instanceof InputIntent.Cancel || intent instanceof InputIntent.Submit) {
                     return new UpdateResult<>(new Model(State.MENU, model.selectedIndex()), List.of());
-                }
-            }
-        } else if (msg instanceof Msg.MouseScrolled scrolled) {
-            if (model.state() == State.MENU) {
-                if (scrolled.yoffset() > 0) { // Scroll up
-                    int next = model.selectedIndex() - 1;
-                    if (next < 0)
-                        next = 2;
-                    return new UpdateResult<>(new Model(State.MENU, next), List.of());
-                } else if (scrolled.yoffset() < 0) { // Scroll down
-                    int next = (model.selectedIndex() + 1) % 3;
-                    return new UpdateResult<>(new Model(State.MENU, next), List.of());
                 }
             }
         }
@@ -108,42 +94,28 @@ public class DiagnosticsPage implements Program<DiagnosticsPage.Model, Diagnosti
 
         int rows = buffer.rows();
         int cols = buffer.cols();
-        String title = " System Diagnostics ";
-        // int titleCol = Math.max(0, (cols - title.length()) / 2);
-
+        String title = " Diagnostics ";
         String[] options = { "Display Test Pattern", "Font Diagnostic", "Return to Main Menu" };
         int startRow = rows / 4 + 4;
-        // boolean blinkVisible = ((nowMillis / 500L) % 2L) == 0L;
 
         int maxOptLen = 0;
         for (String opt : options) {
             maxOptLen = Math.max(maxOptLen, opt.length());
         }
-        int boxWidth = maxOptLen + 12; // Padding
-        int boxHeight = options.length * 2 + 1;
+        int boxWidth = maxOptLen + 12;
+        int boxHeight = options.length * 2 + 3;
         int boxX = (cols - boxWidth) / 2;
-        int boxY = startRow - 1;
+        int boxY = startRow - 2;
 
         com.algoblock.gl.ui.components.PanelComponent.drawBoxWithTitle(
-                buffer, boxX, boxY, boxWidth, boxHeight, title, 0x555555, BG, 0x00FF00);
+                buffer, boxX, boxY, boxWidth, boxHeight, title, 0x555555, BG, 0x22CC22);
 
-        int cursorCol = -1;
-        int cursorRow = -1;
+        int[] cursorInfo = com.algoblock.gl.ui.components.PanelComponent.drawLeftAlignedOptions(
+                buffer, boxX, boxWidth, startRow, options, model.selectedIndex(), 2, 2, 0x888888, 0xFFFFFF, BG);
 
-        for (int i = 0; i < options.length; i++) {
-            String text = options[i];
-            int textCol = (cols - text.length()) / 2;
-            int textRow = startRow + i * 2;
+        int cursorCol = cursorInfo[0];
+        int cursorRow = cursorInfo[1];
 
-            if (i == model.selectedIndex()) {
-                buffer.print(Math.max(0, textCol), textRow, text, 0xFFFFFF, BG);
-                cursorCol = Math.max(0, textCol - 2);
-                cursorRow = textRow;
-            } else {
-                buffer.print(Math.max(0, textCol), textRow, text, 0x888888, BG);
-            }
-        }
-
-        return new RenderFrame(buffer, cursorCol, cursorRow, true, true, 0x00FF00, List.of());
+        return new RenderFrame(buffer, cursorCol, cursorRow, true, true, 0x22CC22, List.of());
     }
 }

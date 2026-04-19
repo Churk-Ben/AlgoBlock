@@ -1,7 +1,7 @@
 package com.algoblock.gl.ui.pages.diagnostics;
 
-import com.algoblock.gl.renderer.RenderFrame;
-import com.algoblock.gl.renderer.TerminalBuffer;
+import com.algoblock.gl.renderer.core.RenderFrame;
+import com.algoblock.gl.renderer.core.TerminalBuffer;
 
 public class DisplayTestPattern {
     private static final double CHECKERBOARD_VARIANT_SECONDS = 1.0;
@@ -9,22 +9,38 @@ public class DisplayTestPattern {
     private static final double CHECKERBOARD_SECONDS = CHECKERBOARD_VARIANT_SECONDS * CHECKERBOARD_VARIANTS;
     private static final double FULL_RED_SECONDS = 1.5;
     private static final double FULL_GREEN_SECONDS = 1.5;
+    private static final double FULL_BLUE_SECONDS = 1.5;
     private static final double ROLLING_SECONDS = 8.0;
-    private static final double TOTAL_SECONDS = CHECKERBOARD_SECONDS + FULL_RED_SECONDS + FULL_GREEN_SECONDS
-            + ROLLING_SECONDS;
+    private static final double TOTAL_SECONDS = CHECKERBOARD_SECONDS +
+            FULL_RED_SECONDS +
+            FULL_GREEN_SECONDS +
+            FULL_BLUE_SECONDS +
+            ROLLING_SECONDS;
 
-    private static final int BG_DARK_A = 0x101418;
-    private static final int BG_DARK_B = 0xD9DEE3;
-    private static final int BG_RED = 0xFF0000;
-    private static final int BG_GREEN = 0x00FF00;
-    private static final int BG_IDLE = 0x1C2833;
-    private static final int FG_BRIGHT = 0xF8FCFF;
-    private static final int FG_DARK = 0x0E1116;
+    private static final int BG_DARK_A = 0x0D1117; // 游戏窗口背景颜色
+    private static final int BG_DARK_B = 0x555555; // 灰度色01
+    private static final int BG_RED = 0xFF0000; // 红色
+    private static final int BG_GREEN = 0x00FF00; // 绿色
+    private static final int BG_BLUE = 0x0000FF; // 蓝色
+    private static final int BG_IDLE = 0x0D1117; // 游戏窗口背景颜色
+    private static final int FG_BRIGHT = 0xFFFFFF; // 文本颜色
+    private static final int FG_DARK = 0x888888; // 灰度色02
+
+    private double startTime = -1.0;
+
+    public void reset() {
+        startTime = -1.0;
+    }
 
     public RenderFrame renderTo(TerminalBuffer buffer, double timeSeconds) {
+        if (startTime < 0) {
+            startTime = timeSeconds;
+        }
+        double t = normalize(timeSeconds - startTime);
         int cols = buffer.cols();
         int rows = buffer.rows();
-        double t = normalize(timeSeconds);
+
+        // Checkerboard test
         if (t < CHECKERBOARD_SECONDS) {
             int variant = Math.min(CHECKERBOARD_VARIANTS - 1, (int) (t / CHECKERBOARD_VARIANT_SECONDS));
             renderCheckerboard(buffer, cols, rows, variant);
@@ -41,27 +57,32 @@ public class DisplayTestPattern {
             return null;
         }
         t -= FULL_GREEN_SECONDS;
+        if (t < FULL_BLUE_SECONDS) {
+            fill(buffer, cols, rows, BG_BLUE);
+            return null;
+        }
+        t -= FULL_BLUE_SECONDS;
 
         // Cursor jump test
         fill(buffer, cols, rows, BG_IDLE);
         int cursorCol = 0;
         int cursorRow = 0;
-        int phase = (int) (t * 2.0) % 4; // jump twice a second
+        int phase = (int) (t * 2.0) % 4;
         if (phase == 0) {
             cursorCol = 1;
-            cursorRow = 1; // Top-Left
+            cursorRow = 1;
         } else if (phase == 1) {
             cursorCol = cols - 2;
-            cursorRow = 1; // Top-Right
+            cursorRow = 1;
         } else if (phase == 2) {
             cursorCol = 1;
-            cursorRow = rows - 2; // Bottom-Left
+            cursorRow = rows - 2;
         } else {
             cursorCol = cols - 2;
-            cursorRow = rows - 2; // Bottom-Right
+            cursorRow = rows - 2;
         }
 
-        return new RenderFrame(buffer, cursorCol, cursorRow, true, true, 0x00FF00, java.util.List.of());
+        return new RenderFrame(buffer, cursorCol, cursorRow, true, true, 0x22CC22, java.util.List.of());
     }
 
     private static double normalize(double t) {
@@ -76,8 +97,6 @@ public class DisplayTestPattern {
         boolean inverted = variant >= 2;
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
-                // For Chinese, 1 logical block = 2 cells
-                // For English, 1 logical block = 2 cells (A+B or C+D)
                 int logicalCol = col / 2;
                 boolean evenCell = ((row + logicalCol) & 1) == 0;
                 if (inverted) {
