@@ -10,7 +10,9 @@ import com.algoblock.gl.ui.tea.UpdateResult;
 import com.algoblock.core.levels.Level;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class AppProgram implements Program<AppModel, AppMsg, AppCmd> {
 
@@ -18,12 +20,20 @@ public class AppProgram implements Program<AppModel, AppMsg, AppCmd> {
     private final GamePage gamePage;
     private final DiagnosticsPage diagnosticsPage;
     private final Level initialLevel;
+    private final Map<Integer, Level> levelById;
 
-    public AppProgram(StartPage startPage, GamePage gamePage, DiagnosticsPage diagnosticsPage, Level initialLevel) {
+    public AppProgram(StartPage startPage, GamePage gamePage, DiagnosticsPage diagnosticsPage, List<Level> levels) {
+        if (levels == null || levels.isEmpty()) {
+            throw new IllegalArgumentException("levels must not be empty");
+        }
         this.startPage = startPage;
         this.gamePage = gamePage;
         this.diagnosticsPage = diagnosticsPage;
-        this.initialLevel = initialLevel;
+        this.initialLevel = levels.stream().min((a, b) -> Integer.compare(a.id(), b.id())).orElseThrow();
+        this.levelById = new HashMap<>();
+        for (Level level : levels) {
+            this.levelById.put(level.id(), level);
+        }
     }
 
     @Override
@@ -80,6 +90,18 @@ public class AppProgram implements Program<AppModel, AppMsg, AppCmd> {
                 UpdateResult<GamePage.Model, GamePage.Cmd> result = gamePage.update(model.gameModel(), gameMsg);
                 List<AppCmd> commands = new ArrayList<>();
                 AppModel.Screen nextScreen = model.screen();
+                GamePage.Model nextGameModel = result.model();
+                Level nextCurrentLevel = model.currentLevel();
+
+                if (msg instanceof AppMsg.SubmitFinished sf && sf.result().accepted()) {
+                    commands.add(new AppCmd.PlaySound("/assets/audio/accept.mp3"));
+                    Level nextLevel = levelById.get(model.currentLevel().id() + 1);
+                    if (nextLevel != null) {
+                        nextCurrentLevel = nextLevel;
+                        nextGameModel = GamePage.Model.init(nextLevel, System.currentTimeMillis() / 1000);
+                    }
+                }
+
                 if (result.commands() != null) {
                     for (GamePage.Cmd cmd : result.commands()) {
                         if (cmd instanceof GamePage.Cmd.Submit submit) {
@@ -91,8 +113,8 @@ public class AppProgram implements Program<AppModel, AppMsg, AppCmd> {
                         }
                     }
                 }
-                AppModel nextModel = new AppModel(nextScreen, model.startModel(), result.model(),
-                        model.diagnosticsModel(), model.currentLevel());
+                AppModel nextModel = new AppModel(nextScreen, model.startModel(), nextGameModel,
+                        model.diagnosticsModel(), nextCurrentLevel);
                 return new UpdateResult<>(nextModel, commands);
             }
             return new UpdateResult<>(model, List.of());

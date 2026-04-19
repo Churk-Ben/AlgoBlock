@@ -83,14 +83,14 @@ public class Main {
         });
 
         LevelLoader levelLoader = new LevelLoader();
-        Level level1 = levelLoader.loadFromResource("/levels/level-1.json");
+        List<Level> levels = levelLoader.loadRange(1, 4);
         BlockRegistry registry = new BlockRegistry();
         GameCoreService service = new GameCoreService(registry);
 
         StartPage startPage = new StartPage();
         GamePage gamePage = new GamePage(new CompletionService(registry));
         DiagnosticsPage diagnosticsPage = new DiagnosticsPage();
-        AppProgram program = new AppProgram(startPage, gamePage, diagnosticsPage, level1);
+        AppProgram program = new AppProgram(startPage, gamePage, diagnosticsPage, levels);
         AppCmdHandler cmdHandler = new AppCmdHandler(service);
 
         TeaRuntime<AppModel, AppMsg, AppCmd> uiRuntime = new TeaRuntime<>(program, cmdHandler);
