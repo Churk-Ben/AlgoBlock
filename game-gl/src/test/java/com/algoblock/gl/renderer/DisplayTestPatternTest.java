@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
+import com.algoblock.gl.renderer.core.RenderFrame;
+import com.algoblock.gl.renderer.core.TerminalBuffer;
 import com.algoblock.gl.ui.pages.diagnostics.DisplayTestPattern;
 
 class DisplayTestPatternTest {
