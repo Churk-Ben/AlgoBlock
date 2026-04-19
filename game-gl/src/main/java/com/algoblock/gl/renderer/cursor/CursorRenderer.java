@@ -73,8 +73,12 @@ public class CursorRenderer {
 
         float cellWidth = textRenderer.cellWidthPx();
         float cellHeight = textRenderer.cellHeightPx();
-        float targetX = frame.cursorCol() * cellWidth + cellWidth * 0.5f;
-        float targetY = frame.cursorRow() * cellHeight + cellHeight * 0.5f;
+        int cols = frame.textBuffer() != null ? frame.textBuffer().cols() : 0;
+        int rows = frame.textBuffer() != null ? frame.textBuffer().rows() : 0;
+        float marginX = textRenderer.gridOffsetXPx(cols);
+        float marginY = textRenderer.gridOffsetYPx(rows);
+        float targetX = marginX + frame.cursorCol() * cellWidth + cellWidth * 0.5f;
+        float targetY = marginY + frame.cursorRow() * cellHeight + cellHeight * 0.5f;
 
         if (animatedX < 0) {
             animatedX = targetX;

@@ -84,6 +84,16 @@ public class TextRenderer {
         return Math.max(4f, (fontAtlas.cjkAdvancePx() * 0.5f) + 1f);
     }
 
+    public float gridOffsetXPx(int cols) {
+        float contentWidth = Math.max(0, cols) * cellWidthPx();
+        return Math.max(0f, (viewportWidth - contentWidth) * 0.5f);
+    }
+
+    public float gridOffsetYPx(int rows) {
+        float contentHeight = Math.max(0, rows) * cellHeightPx();
+        return Math.max(0f, (viewportHeight - contentHeight) * 0.5f);
+    }
+
     private void drawTextLayer(TerminalBuffer buffer) {
         glViewport(0, 0, viewportWidth, viewportHeight);
         glMatrixMode(GL_PROJECTION);
@@ -95,11 +105,10 @@ public class TextRenderer {
         TerminalBuffer.Cell[] cells = buffer.cells();
         int cols = buffer.cols();
         int rows = buffer.rows();
-        float marginX = 0f;
-        float marginY = 0f;
+        float marginX = gridOffsetXPx(cols);
+        float marginY = gridOffsetYPx(rows);
         float cellHeight = cellHeightPx();
         float cellWidth = cellWidthPx();
-        // float halfCellWidth = cellWidth * 0.5f;
         float baselineBias = Math.max(0f, (cellHeight - fontAtlas.lineHeightPx()) * 0.5f);
 
         for (TerminalBuffer.Cell cell : cells) {
