@@ -9,6 +9,9 @@ public sealed interface AppMsg {
     record KeyPressed(int key) implements AppMsg {
     }
 
+    record MouseScrolled(double xoffset, double yoffset) implements AppMsg {
+    }
+
     record SubmitFinished(SubmissionResult result) implements AppMsg {
     }
 }

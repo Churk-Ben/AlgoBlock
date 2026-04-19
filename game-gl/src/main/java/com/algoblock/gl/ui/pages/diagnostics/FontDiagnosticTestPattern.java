@@ -1,4 +1,4 @@
-package com.algoblock.gl.renderer.test;
+package com.algoblock.gl.ui.pages.diagnostics;
 
 import com.algoblock.gl.renderer.TerminalBuffer;
 

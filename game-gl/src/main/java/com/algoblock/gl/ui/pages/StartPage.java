@@ -6,6 +6,7 @@ import com.algoblock.gl.renderer.TerminalBuffer;
 import com.algoblock.gl.ui.tea.Program;
 import com.algoblock.gl.ui.tea.UpdateResult;
 
+import com.algoblock.gl.ui.components.CMatrixEffect;
 import com.algoblock.gl.ui.components.GlitchEffect;
 import com.algoblock.gl.renderer.GlitchState;
 import com.algoblock.gl.renderer.UiEffect;
@@ -30,19 +31,25 @@ public class StartPage implements Program<StartPage.Model, StartPage.Msg, StartP
             "              |_____|                                      "
     };
 
-    public record Model() {
+    public record Model(int selectedIndex) {
         public static Model init() {
-            return new Model();
+            return new Model(0);
         }
     }
 
     public sealed interface Msg {
         record KeyPressed(int key) implements Msg {
         }
+
+        record MouseScrolled(double xoffset, double yoffset) implements Msg {
+        }
     }
 
     public sealed interface Cmd {
         record StartGame() implements Cmd {
+        }
+
+        record OpenDiagnostics() implements Cmd {
         }
     }
 
@@ -54,8 +61,21 @@ public class StartPage implements Program<StartPage.Model, StartPage.Msg, StartP
     @Override
     public UpdateResult<Model, Cmd> update(Model model, Msg msg) {
         if (msg instanceof Msg.KeyPressed keyPressed) {
-            if (KeyMapper.isSubmit(keyPressed.key())) {
-                return new UpdateResult<>(model, List.of(new Cmd.StartGame()));
+            int key = keyPressed.key();
+            if (KeyMapper.isUp(key) || KeyMapper.isDown(key)) {
+                int next = model.selectedIndex() == 0 ? 1 : 0;
+                return new UpdateResult<>(new Model(next), List.of());
+            } else if (KeyMapper.isSubmit(key)) {
+                if (model.selectedIndex() == 0) {
+                    return new UpdateResult<>(model, List.of(new Cmd.StartGame()));
+                } else {
+                    return new UpdateResult<>(model, List.of(new Cmd.OpenDiagnostics()));
+                }
+            }
+        } else if (msg instanceof Msg.MouseScrolled scrolled) {
+            if (scrolled.yoffset() != 0) {
+                int next = model.selectedIndex() == 0 ? 1 : 0;
+                return new UpdateResult<>(new Model(next), List.of());
             }
         }
         return new UpdateResult<>(model, List.of());
@@ -79,16 +99,36 @@ public class StartPage implements Program<StartPage.Model, StartPage.Msg, StartP
 
         // Draw options
         int optionsStartRow = titleStartRow + titleArt.length + 3;
-        String startText = "> Press ENTER to Start Game <";
-        int startCol = (cols - startText.length()) / 2;
-        boolean blinkVisible = ((nowMillis / 500L) % 2L) == 0L;
-        if (blinkVisible) {
-            buffer.print(Math.max(0, startCol), optionsStartRow, startText, 0xFFFFFF, BG);
-        }
+        String[] options = { "Start Game", "System Diagnostics" };
+        // boolean blinkVisible = ((nowMillis / 500L) % 2L) == 0L;
 
-        String placeholderText = "  [ Options (WIP) ]  ";
-        int placeholderCol = (cols - placeholderText.length()) / 2;
-        buffer.print(Math.max(0, placeholderCol), optionsStartRow + 2, placeholderText, 0x888888, BG);
+        int maxOptLen = 0;
+        for (String opt : options) {
+            maxOptLen = Math.max(maxOptLen, opt.length());
+        }
+        int boxWidth = maxOptLen + 12; // Extra padding for "> <" and margins
+        int boxHeight = options.length * 2 + 1;
+        int boxX = (cols - boxWidth) / 2;
+        int boxY = optionsStartRow - 1;
+
+        com.algoblock.gl.ui.components.PanelComponent.drawBox(buffer, boxX, boxY, boxWidth, boxHeight, 0x555555, BG);
+
+        int cursorCol = -1;
+        int cursorRow = -1;
+
+        for (int i = 0; i < options.length; i++) {
+            String text = options[i];
+            int textCol = (cols - text.length()) / 2;
+            int textRow = optionsStartRow + i * 2;
+
+            if (i == model.selectedIndex()) {
+                buffer.print(Math.max(0, textCol), textRow, text, 0xFFFFFF, BG);
+                cursorCol = Math.max(0, textCol - 2);
+                cursorRow = textRow;
+            } else {
+                buffer.print(Math.max(0, textCol), textRow, text, 0x888888, BG);
+            }
+        }
 
         GlitchState glitch = glitchEffect.update(nowMillis);
         List<UiEffect> effects = new java.util.ArrayList<>();
@@ -97,7 +137,7 @@ public class StartPage implements Program<StartPage.Model, StartPage.Msg, StartP
             effects.add(new UiEffect.Glitch(glitch));
         }
 
-        return new RenderFrame(buffer, -1, -1, false, false, 0, List.copyOf(effects));
+        return new RenderFrame(buffer, cursorCol, cursorRow, true, true, 0x00FF00, List.copyOf(effects));
     }
 
     private static final String[] TITLE_RESOURCES = {
@@ -132,81 +172,6 @@ public class StartPage implements Program<StartPage.Model, StartPage.Msg, StartP
         while (last >= 0 && lines.get(last).trim().isEmpty()) {
             lines.remove(last);
             last--;
-        }
-    }
-
-    private static class CMatrixEffect {
-        private final Random random = new Random();
-        private long lastUpdate = 0;
-        private Drop[] drops;
-
-        private static class Drop {
-            float y;
-            float speed;
-            int length;
-            char[] chars;
-        }
-
-        public void update(int cols, int rows, long nowMillis) {
-            if (drops == null || drops.length != cols) {
-                drops = new Drop[cols];
-                for (int i = 0; i < cols; i++) {
-                    drops[i] = createDrop(rows);
-                    drops[i].y = random.nextInt(rows);
-                }
-            }
-
-            long dt = nowMillis - lastUpdate;
-            if (lastUpdate == 0)
-                dt = 0;
-            lastUpdate = nowMillis;
-
-            for (int i = 0; i < cols; i++) {
-                Drop drop = drops[i];
-                drop.y += drop.speed * (dt / 1000f);
-                if (drop.y - drop.length > rows) {
-                    drops[i] = createDrop(rows);
-                }
-                if (random.nextFloat() < 0.1f) {
-                    drop.chars[random.nextInt(drop.length)] = getRandomChar();
-                }
-            }
-        }
-
-        public void render(TerminalBuffer buffer) {
-            int rows = buffer.rows();
-            int cols = buffer.cols();
-            for (int i = 0; i < cols; i++) {
-                Drop drop = drops[i];
-                int headY = (int) drop.y;
-                for (int j = 0; j < drop.length; j++) {
-                    int y = headY - j;
-                    if (y >= 0 && y < rows) {
-                        int color = (j == 0) ? 0x99FF99 : 0x008800;
-                        if (j > drop.length - 3) {
-                            color = 0x004400;
-                        }
-                        buffer.print(i, y, String.valueOf(drop.chars[j]), color, BG);
-                    }
-                }
-            }
-        }
-
-        private Drop createDrop(int rows) {
-            Drop drop = new Drop();
-            drop.y = -random.nextInt(10);
-            drop.speed = 8 + random.nextFloat() * 12;
-            drop.length = 5 + random.nextInt(15);
-            drop.chars = new char[drop.length];
-            for (int i = 0; i < drop.length; i++) {
-                drop.chars[i] = getRandomChar();
-            }
-            return drop;
-        }
-
-        private char getRandomChar() {
-            final String glyphs = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-            return glyphs.charAt(random.nextInt(glyphs.length()));
         }
     }
 }

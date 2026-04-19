@@ -102,8 +102,8 @@ public class CursorRenderer {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         glUseProgram(shaderProgram);
-        glUniform2f(uStartLoc, targetX, targetY); // tail
-        glUniform2f(uEndLoc, animatedX, animatedY); // head
+        glUniform2f(uStartLoc, targetX, targetY); // head (target position)
+        glUniform2f(uEndLoc, animatedX, animatedY); // tail (animated position)
         glUniform2f(uSizeLoc, cellWidth, cellHeight);
         glUniform4f(uColorLoc, r, g, b, a);
         glUniform1i(uBlockStyleLoc, frame.cursorBlockStyle() ? 1 : 0);

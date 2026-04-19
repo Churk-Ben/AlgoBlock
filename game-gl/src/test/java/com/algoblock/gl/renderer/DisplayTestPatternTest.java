@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-import com.algoblock.gl.renderer.test.DisplayTestPattern;
+import com.algoblock.gl.ui.pages.diagnostics.DisplayTestPattern;
 
 class DisplayTestPatternTest {
     @Test
