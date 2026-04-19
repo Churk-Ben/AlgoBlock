@@ -2,7 +2,7 @@ package com.algoblock.gl.ui.pages;
 
 import com.algoblock.core.engine.SubmissionResult;
 import com.algoblock.core.levels.Level;
-import com.algoblock.gl.input.KeyMapper;
+import com.algoblock.gl.input.InputKey;
 import com.algoblock.gl.renderer.RenderFrame;
 import com.algoblock.gl.renderer.TerminalBuffer;
 import com.algoblock.gl.renderer.UiEffect;
@@ -51,7 +51,7 @@ public class GamePage implements Program<GamePage.Model, GamePage.Msg, GamePage.
         record CharTyped(char value) implements Msg {
         }
 
-        record KeyPressed(int key) implements Msg {
+        record KeyPressed(InputKey key) implements Msg {
         }
 
         record SubmitFinished(SubmissionResult result) implements Msg {
@@ -95,21 +95,21 @@ public class GamePage implements Program<GamePage.Model, GamePage.Msg, GamePage.
         }
 
         if (msg instanceof Msg.KeyPressed keyPressed) {
-            int key = keyPressed.key();
+            InputKey key = keyPressed.key();
 
             // 1. If completer is active, route specific keys to it
             if (model.completerModel().active()) {
-                if (KeyMapper.isUp(key)) {
+                if (key == InputKey.NAV_UP) {
                     UpdateResult<CompleterComponent.Model, Void> r = CompleterComponent.update(model.completerModel(),
                             new CompleterComponent.Msg.Prev());
                     return new UpdateResult<>(model.withCompleterModel(r.model()), List.of());
                 }
-                if (KeyMapper.isDown(key)) {
+                if (key == InputKey.NAV_DOWN) {
                     UpdateResult<CompleterComponent.Model, Void> r = CompleterComponent.update(model.completerModel(),
                             new CompleterComponent.Msg.Next());
                     return new UpdateResult<>(model.withCompleterModel(r.model()), List.of());
                 }
-                if (KeyMapper.isSubmit(key) || KeyMapper.isTab(key)) {
+                if (key == InputKey.SUBMIT || key == InputKey.TAB) {
                     // Confirm selection
                     int selectedIndex = model.completerModel().selectedIndex();
                     if (selectedIndex >= 0 && selectedIndex < model.completerModel().items().size()) {
@@ -131,8 +131,8 @@ public class GamePage implements Program<GamePage.Model, GamePage.Msg, GamePage.
                         return new UpdateResult<>(next, List.of());
                     }
                 }
-                if (KeyMapper.isLeft(key) || KeyMapper.isRight(key) || KeyMapper.isBackspace(key)
-                        || KeyMapper.isDelete(key)) {
+                if (key == InputKey.NAV_LEFT || key == InputKey.NAV_RIGHT || key == InputKey.BACKSPACE
+                        || key == InputKey.DELETE) {
                     // Hide completer and let it fall through
                     UpdateResult<CompleterComponent.Model, Void> r = CompleterComponent.update(model.completerModel(),
                             new CompleterComponent.Msg.Hide());
@@ -144,31 +144,31 @@ public class GamePage implements Program<GamePage.Model, GamePage.Msg, GamePage.
             String line = model.line();
             int cursor = clampCursor(model.cursorIndex(), line.length());
 
-            if (KeyMapper.isBackspace(key) && cursor > 0) {
+            if (key == InputKey.BACKSPACE && cursor > 0) {
                 String nextLine = line.substring(0, cursor - 1) + line.substring(cursor);
                 long solidUntil = System.currentTimeMillis() + CURSOR_SOLID_AFTER_EDIT_MS;
                 Model next = new Model(model.level(), nextLine, cursor - 1, model.lastResult(),
                         model.startEpochSeconds(), solidUntil, model.completerModel());
                 return new UpdateResult<>(next, List.of());
             }
-            if (KeyMapper.isDelete(key) && cursor < line.length()) {
+            if (key == InputKey.DELETE && cursor < line.length()) {
                 String nextLine = line.substring(0, cursor) + line.substring(cursor + 1);
                 long solidUntil = System.currentTimeMillis() + CURSOR_SOLID_AFTER_EDIT_MS;
                 Model next = new Model(model.level(), nextLine, cursor, model.lastResult(), model.startEpochSeconds(),
                         solidUntil, model.completerModel());
                 return new UpdateResult<>(next, List.of());
             }
-            if (KeyMapper.isLeft(key)) {
+            if (key == InputKey.NAV_LEFT) {
                 Model next = new Model(model.level(), line, Math.max(0, cursor - 1), model.lastResult(),
                         model.startEpochSeconds(), model.cursorSolidUntilMillis(), model.completerModel());
                 return new UpdateResult<>(next, List.of());
             }
-            if (KeyMapper.isRight(key)) {
+            if (key == InputKey.NAV_RIGHT) {
                 Model next = new Model(model.level(), line, Math.min(line.length(), cursor + 1), model.lastResult(),
                         model.startEpochSeconds(), model.cursorSolidUntilMillis(), model.completerModel());
                 return new UpdateResult<>(next, List.of());
             }
-            if (KeyMapper.isTab(key)) {
+            if (key == InputKey.TAB) {
                 String prefix = currentPrefix(line, cursor);
                 Set<String> available = new HashSet<>(model.level().availableBlocks());
                 List<String> suggestions = completionService.complete(prefix, available);
@@ -180,7 +180,7 @@ public class GamePage implements Program<GamePage.Model, GamePage.Msg, GamePage.
                 }
                 return new UpdateResult<>(model, List.of());
             }
-            if (KeyMapper.isSubmit(key)) {
+            if (key == InputKey.SUBMIT) {
                 long elapsed = (System.currentTimeMillis() / 1000) - model.startEpochSeconds();
                 Cmd.Submit command = new Cmd.Submit(model.level(), line, elapsed);
                 Model next = new Model(model.level(), line, cursor, model.lastResult(), model.startEpochSeconds(),

@@ -9,6 +9,7 @@ import com.algoblock.core.engine.BlockRegistry;
 import com.algoblock.core.engine.ScoreResult;
 import com.algoblock.core.engine.SubmissionResult;
 import com.algoblock.core.levels.Level;
+import com.algoblock.gl.input.InputKey;
 import com.algoblock.gl.services.CompletionService;
 import com.algoblock.gl.ui.components.CompleterComponent;
 import com.algoblock.gl.ui.tea.UpdateResult;
@@ -24,7 +25,7 @@ class GamePageTest {
 
         model = page.update(model, new GamePage.Msg.CharTyped('a')).model();
         model = page.update(model, new GamePage.Msg.CharTyped('c')).model();
-        model = page.update(model, new GamePage.Msg.KeyPressed(263)).model(); // left
+        model = page.update(model, new GamePage.Msg.KeyPressed(InputKey.NAV_LEFT)).model();
         model = page.update(model, new GamePage.Msg.CharTyped('b')).model();
 
         assertEquals("abc", model.line());
@@ -37,11 +38,11 @@ class GamePageTest {
         GamePage page = new GamePage(new CompletionService(new BlockRegistry()));
         GamePage.Model model = new GamePage.Model(level(), "abcd", 2, null, 1L, 0L, CompleterComponent.Model.init());
 
-        model = page.update(model, new GamePage.Msg.KeyPressed(259)).model(); // backspace
+        model = page.update(model, new GamePage.Msg.KeyPressed(InputKey.BACKSPACE)).model();
         assertEquals("acd", model.line());
         assertEquals(1, model.cursorIndex());
 
-        model = page.update(model, new GamePage.Msg.KeyPressed(261)).model(); // delete
+        model = page.update(model, new GamePage.Msg.KeyPressed(InputKey.DELETE)).model();
         assertEquals("ad", model.line());
         assertEquals(1, model.cursorIndex());
     }
@@ -51,7 +52,7 @@ class GamePageTest {
         GamePage page = new GamePage(new CompletionService(new BlockRegistry()));
         GamePage.Model model = new GamePage.Model(level(), "Ma", 2, null, 1L, 0L, CompleterComponent.Model.init());
 
-        GamePage.Model next = page.update(model, new GamePage.Msg.KeyPressed(258)).model(); // tab
+        GamePage.Model next = page.update(model, new GamePage.Msg.KeyPressed(InputKey.TAB)).model();
 
         assertTrue(next.completerModel().active());
         assertTrue(next.completerModel().items().contains("Map"));
@@ -60,9 +61,11 @@ class GamePageTest {
     @Test
     void shouldEmitSubmitCommandAndApplySubmitResult() {
         GamePage page = new GamePage(new CompletionService(new BlockRegistry()));
-        GamePage.Model model = new GamePage.Model(level(), "Map _INPUT_", 11, null, 1L, 0L, CompleterComponent.Model.init());
+        GamePage.Model model = new GamePage.Model(level(), "Map _INPUT_", 11, null, 1L, 0L,
+                CompleterComponent.Model.init());
 
-        UpdateResult<GamePage.Model, GamePage.Cmd> result = page.update(model, new GamePage.Msg.KeyPressed(257)); // enter
+        UpdateResult<GamePage.Model, GamePage.Cmd> result = page.update(model,
+                new GamePage.Msg.KeyPressed(InputKey.SUBMIT));
         assertEquals(1, result.commands().size());
         GamePage.Cmd.Submit submit = assertInstanceOf(GamePage.Cmd.Submit.class, result.commands().get(0));
         assertEquals("Map _INPUT_", submit.source());
@@ -74,7 +77,8 @@ class GamePageTest {
                 List.of(),
                 List.of(2, 4, 6),
                 "AC");
-        GamePage.Model afterSubmit = page.update(result.model(), new GamePage.Msg.SubmitFinished(submissionResult)).model();
+        GamePage.Model afterSubmit = page.update(result.model(), new GamePage.Msg.SubmitFinished(submissionResult))
+                .model();
         assertEquals("AC", afterSubmit.lastResult().message());
     }
 

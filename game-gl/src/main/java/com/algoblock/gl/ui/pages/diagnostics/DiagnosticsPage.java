@@ -1,6 +1,6 @@
 package com.algoblock.gl.ui.pages.diagnostics;
 
-import com.algoblock.gl.input.KeyMapper;
+import com.algoblock.gl.input.InputKey;
 import com.algoblock.gl.renderer.RenderFrame;
 import com.algoblock.gl.renderer.TerminalBuffer;
 import com.algoblock.gl.ui.tea.Program;
@@ -24,7 +24,7 @@ public class DiagnosticsPage implements Program<DiagnosticsPage.Model, Diagnosti
     }
 
     public sealed interface Msg {
-        record KeyPressed(int key) implements Msg {
+        record KeyPressed(InputKey key) implements Msg {
         }
 
         record MouseScrolled(double xoffset, double yoffset) implements Msg {
@@ -49,17 +49,17 @@ public class DiagnosticsPage implements Program<DiagnosticsPage.Model, Diagnosti
     @Override
     public UpdateResult<Model, Cmd> update(Model model, Msg msg) {
         if (msg instanceof Msg.KeyPressed keyPressed) {
-            int key = keyPressed.key();
+            InputKey key = keyPressed.key();
             if (model.state() == State.MENU) {
-                if (KeyMapper.isUp(key)) {
+                if (key == InputKey.NAV_UP) {
                     int next = model.selectedIndex() - 1;
                     if (next < 0)
                         next = 2;
                     return new UpdateResult<>(new Model(State.MENU, next), List.of());
-                } else if (KeyMapper.isDown(key)) {
+                } else if (key == InputKey.NAV_DOWN) {
                     int next = (model.selectedIndex() + 1) % 3;
                     return new UpdateResult<>(new Model(State.MENU, next), List.of());
-                } else if (KeyMapper.isSubmit(key)) {
+                } else if (key == InputKey.SUBMIT) {
                     if (model.selectedIndex() == 0) {
                         return new UpdateResult<>(new Model(State.DISPLAY_TEST, model.selectedIndex()), List.of());
                     } else if (model.selectedIndex() == 1) {
@@ -67,12 +67,12 @@ public class DiagnosticsPage implements Program<DiagnosticsPage.Model, Diagnosti
                     } else if (model.selectedIndex() == 2) {
                         return new UpdateResult<>(model, List.of(new Cmd.ReturnToStart()));
                     }
-                } else if (key == 256) { // ESC
+                } else if (key == InputKey.CANCEL) {
                     return new UpdateResult<>(model, List.of(new Cmd.ReturnToStart()));
                 }
             } else {
                 // Inside a test
-                if (key == 256 || KeyMapper.isSubmit(key)) { // ESC or ENTER to exit test
+                if (key == InputKey.CANCEL || key == InputKey.SUBMIT) {
                     return new UpdateResult<>(new Model(State.MENU, model.selectedIndex()), List.of());
                 }
             }

@@ -1,39 +1,34 @@
 package com.algoblock.gl.input;
 
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_BACKSPACE;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_DELETE;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_DOWN;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_TAB;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_UP;
+
+import java.util.Optional;
+
 public class KeyMapper {
-    public static boolean isSubmit(int key) {
-        return key == 257; // Enter
+    private KeyMapper() {
     }
 
-    public static boolean isBackspace(int key) {
-        return key == 259; // Backspace
-    }
-
-    public static boolean isTab(int key) {
-        return key == 258; // Tab
-    }
-
-    public static boolean isSpace(int key) {
-        return key == 32; // Space
-    }
-
-    public static boolean isLeft(int key) {
-        return key == 263; // Left
-    }
-
-    public static boolean isRight(int key) {
-        return key == 262; // Right
-    }
-
-    public static boolean isUp(int key) {
-        return key == 265; // Up
-    }
-
-    public static boolean isDown(int key) {
-        return key == 264; // Down
-    }
-
-    public static boolean isDelete(int key) {
-        return key == 261; // Delete
+    public static Optional<InputKey> toInputKey(int glfwKey) {
+        InputKey mapped = switch (glfwKey) {
+            case GLFW_KEY_ENTER -> InputKey.SUBMIT;
+            case GLFW_KEY_BACKSPACE -> InputKey.BACKSPACE;
+            case GLFW_KEY_TAB -> InputKey.TAB;
+            case GLFW_KEY_LEFT -> InputKey.NAV_LEFT;
+            case GLFW_KEY_RIGHT -> InputKey.NAV_RIGHT;
+            case GLFW_KEY_UP -> InputKey.NAV_UP;
+            case GLFW_KEY_DOWN -> InputKey.NAV_DOWN;
+            case GLFW_KEY_DELETE -> InputKey.DELETE;
+            case GLFW_KEY_ESCAPE -> InputKey.CANCEL;
+            default -> null;
+        };
+        return Optional.ofNullable(mapped);
     }
 }

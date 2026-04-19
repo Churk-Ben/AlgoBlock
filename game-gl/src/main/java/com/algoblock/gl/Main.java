@@ -1,17 +1,5 @@
 package com.algoblock.gl;
 
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_BACKSPACE;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_DELETE;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER;
-// import static org.lwjgl.glfw.GLFW.GLFW_KEY_F2;
-// import static org.lwjgl.glfw.GLFW.GLFW_KEY_F3;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_UP;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_DOWN;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_TAB;
-import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
-import static org.lwjgl.glfw.GLFW.GLFW_REPEAT;
 import static org.lwjgl.glfw.GLFW.GLFW_RESIZABLE;
 import static org.lwjgl.glfw.GLFW.GLFW_TRUE;
 import static org.lwjgl.glfw.GLFW.glfwCreateWindow;
@@ -21,9 +9,6 @@ import static org.lwjgl.glfw.GLFW.glfwGetTime;
 import static org.lwjgl.glfw.GLFW.glfwGetFramebufferSize;
 import static org.lwjgl.glfw.GLFW.glfwInit;
 import static org.lwjgl.glfw.GLFW.glfwMakeContextCurrent;
-import static org.lwjgl.glfw.GLFW.glfwSetCharCallback;
-import static org.lwjgl.glfw.GLFW.glfwSetKeyCallback;
-import static org.lwjgl.glfw.GLFW.glfwSetScrollCallback;
 import static org.lwjgl.glfw.GLFW.glfwSetWindowTitle;
 import static org.lwjgl.glfw.GLFW.glfwSwapBuffers;
 import static org.lwjgl.glfw.GLFW.glfwSwapInterval;
@@ -39,6 +24,7 @@ import com.algoblock.core.engine.GameCoreService;
 import com.algoblock.core.levels.Level;
 import com.algoblock.core.levels.LevelLoader;
 import com.algoblock.gl.input.CharEvent;
+import com.algoblock.gl.input.GlfwInputAdapter;
 import com.algoblock.gl.input.InputEvent;
 import com.algoblock.gl.input.InputEventQueue;
 import com.algoblock.gl.input.KeyEvent;
@@ -108,23 +94,8 @@ public class Main {
 
         TeaRuntime<AppModel, AppMsg, AppCmd> uiRuntime = new TeaRuntime<>(program, cmdHandler);
         InputEventQueue eventQueue = new InputEventQueue();
-
-        glfwSetCharCallback(window, (w, codepoint) -> eventQueue.offer(new CharEvent((char) codepoint)));
-        glfwSetScrollCallback(window, (w, xoffset, yoffset) -> eventQueue.offer(new WheelEvent(xoffset, yoffset)));
-        glfwSetKeyCallback(window, (w, key, scancode, action, mods) -> {
-            if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-                if (key == GLFW_KEY_ENTER
-                        || key == GLFW_KEY_BACKSPACE
-                        || key == GLFW_KEY_TAB
-                        || key == GLFW_KEY_LEFT
-                        || key == GLFW_KEY_RIGHT
-                        || key == GLFW_KEY_UP
-                        || key == GLFW_KEY_DOWN
-                        || key == GLFW_KEY_DELETE) {
-                    eventQueue.offer(new KeyEvent(key, action, mods));
-                }
-            }
-        });
+        GlfwInputAdapter inputAdapter = new GlfwInputAdapter(eventQueue);
+        inputAdapter.attach(window);
 
         Thread logicThread = new Thread(() -> {
             while (!glfwWindowShouldClose(window)) {

@@ -1,6 +1,6 @@
 package com.algoblock.gl.ui.pages;
 
-import com.algoblock.gl.input.KeyMapper;
+import com.algoblock.gl.input.InputKey;
 import com.algoblock.gl.renderer.RenderFrame;
 import com.algoblock.gl.renderer.TerminalBuffer;
 import com.algoblock.gl.ui.tea.Program;
@@ -38,7 +38,7 @@ public class StartPage implements Program<StartPage.Model, StartPage.Msg, StartP
     }
 
     public sealed interface Msg {
-        record KeyPressed(int key) implements Msg {
+        record KeyPressed(InputKey key) implements Msg {
         }
 
         record MouseScrolled(double xoffset, double yoffset) implements Msg {
@@ -61,11 +61,11 @@ public class StartPage implements Program<StartPage.Model, StartPage.Msg, StartP
     @Override
     public UpdateResult<Model, Cmd> update(Model model, Msg msg) {
         if (msg instanceof Msg.KeyPressed keyPressed) {
-            int key = keyPressed.key();
-            if (KeyMapper.isUp(key) || KeyMapper.isDown(key)) {
+            InputKey key = keyPressed.key();
+            if (key == InputKey.NAV_UP || key == InputKey.NAV_DOWN) {
                 int next = model.selectedIndex() == 0 ? 1 : 0;
                 return new UpdateResult<>(new Model(next), List.of());
-            } else if (KeyMapper.isSubmit(key)) {
+            } else if (key == InputKey.SUBMIT) {
                 if (model.selectedIndex() == 0) {
                     return new UpdateResult<>(model, List.of(new Cmd.StartGame()));
                 } else {
