@@ -238,3 +238,13 @@ implementation("org.lwjgl:lwjgl-opengl:3.3.4")
 implementation("org.lwjgl:lwjgl-stb:3.3.4")
 implementation("javazoom:jlayer:1.0.1")
 ```
+
+## 约定
+
+- 游戏窗口大小：1280x720
+- 游戏窗口标题：AlgoBlock
+- 游戏窗口背景颜色：#0D1117
+- 主要颜色：#22CC22
+- 文本颜色：#FFFFFF
+- 灰度色01: #555555
+- 灰度色02: #888888

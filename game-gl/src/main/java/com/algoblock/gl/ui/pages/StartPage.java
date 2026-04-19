@@ -1,11 +1,10 @@
 package com.algoblock.gl.ui.pages;
 
 import com.algoblock.gl.input.intent.InputIntent;
+import com.algoblock.gl.ui.effect.CMatrixEffect;
+import com.algoblock.gl.ui.effect.GlitchEffect;
 import com.algoblock.gl.ui.tea.Program;
 import com.algoblock.gl.ui.tea.UpdateResult;
-
-import com.algoblock.gl.ui.components.CMatrixEffect;
-import com.algoblock.gl.ui.components.GlitchEffect;
 import com.algoblock.gl.renderer.core.RenderFrame;
 import com.algoblock.gl.renderer.core.TerminalBuffer;
 import com.algoblock.gl.renderer.effect.GlitchState;

@@ -1,6 +1,6 @@
 package com.algoblock.gl.ui.components;
 
-import com.algoblock.gl.renderer.TerminalBuffer;
+import com.algoblock.gl.renderer.core.TerminalBuffer;
 import com.algoblock.gl.ui.tea.UpdateResult;
 
 import java.util.List;
@@ -57,7 +57,7 @@ public class CompleterComponent {
         if (!model.active() || model.items().isEmpty()) {
             return;
         }
-        
+
         int limit = Math.min(6, model.items().size());
         for (int i = 0; i < limit; i++) {
             if (startRow + i >= buffer.rows()) {
@@ -65,10 +65,10 @@ public class CompleterComponent {
             }
             String item = model.items().get(i);
             boolean selected = (i == model.selectedIndex());
-            
+
             int bg = selected ? 0x3A3D41 : 0x1E1E1E;
             int fg = selected ? 0xFFFFFF : 0xCDD9E5;
-            
+
             // Render the item with padding
             String displayText = " " + item + " ";
             buffer.print(startCol, startRow + i, displayText, fg, bg);

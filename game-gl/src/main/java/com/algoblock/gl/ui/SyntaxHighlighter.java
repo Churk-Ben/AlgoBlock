@@ -1,6 +1,6 @@
 package com.algoblock.gl.ui;
 
-import com.algoblock.gl.renderer.TerminalBuffer;
+import com.algoblock.gl.renderer.core.TerminalBuffer;
 
 public class SyntaxHighlighter {
     public void highlight(TerminalBuffer buffer, int startCol, int row, String source) {

@@ -1,4 +1,4 @@
-package com.algoblock.gl.ui.components;
+package com.algoblock.gl.ui.effect;
 
 import java.util.Random;
 
