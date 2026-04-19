@@ -1,7 +1,8 @@
 package com.algoblock.gl.ui.tea;
 
-import com.algoblock.gl.renderer.RenderFrame;
-import com.algoblock.gl.renderer.TerminalBuffer;
+import com.algoblock.gl.renderer.core.RenderFrame;
+import com.algoblock.gl.renderer.core.TerminalBuffer;
+
 import java.util.concurrent.atomic.AtomicReference;
 
 /**

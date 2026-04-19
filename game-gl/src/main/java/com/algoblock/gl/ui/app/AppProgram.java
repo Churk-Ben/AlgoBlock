@@ -1,7 +1,7 @@
 package com.algoblock.gl.ui.app;
 
-import com.algoblock.gl.renderer.RenderFrame;
-import com.algoblock.gl.renderer.TerminalBuffer;
+import com.algoblock.gl.renderer.core.RenderFrame;
+import com.algoblock.gl.renderer.core.TerminalBuffer;
 import com.algoblock.gl.ui.pages.GamePage;
 import com.algoblock.gl.ui.pages.StartPage;
 import com.algoblock.gl.ui.pages.diagnostics.DiagnosticsPage;
@@ -34,12 +34,9 @@ public class AppProgram implements Program<AppModel, AppMsg, AppCmd> {
     @Override
     public UpdateResult<AppModel, AppCmd> update(AppModel model, AppMsg msg) {
         if (model.screen() == AppModel.Screen.START) {
-            // Map AppMsg to StartPage.Msg
             StartPage.Msg startMsg = null;
-            if (msg instanceof AppMsg.KeyPressed kp) {
-                startMsg = new StartPage.Msg.KeyPressed(kp.key());
-            } else if (msg instanceof AppMsg.MouseScrolled ms) {
-                startMsg = new StartPage.Msg.MouseScrolled(ms.xoffset(), ms.yoffset());
+            if (msg instanceof AppMsg.Intent im) {
+                startMsg = new StartPage.Msg.Intent(im.intent());
             }
 
             if (startMsg != null) {
@@ -68,12 +65,9 @@ public class AppProgram implements Program<AppModel, AppMsg, AppCmd> {
         }
 
         if (model.screen() == AppModel.Screen.GAME) {
-            // Map AppMsg to GamePage.Msg
             GamePage.Msg gameMsg = null;
-            if (msg instanceof AppMsg.CharTyped ct) {
-                gameMsg = new GamePage.Msg.CharTyped(ct.value());
-            } else if (msg instanceof AppMsg.KeyPressed kp) {
-                gameMsg = new GamePage.Msg.KeyPressed(kp.key());
+            if (msg instanceof AppMsg.Intent im) {
+                gameMsg = new GamePage.Msg.Intent(im.intent());
             } else if (msg instanceof AppMsg.SubmitFinished sf) {
                 gameMsg = new GamePage.Msg.SubmitFinished(sf.result());
             }
@@ -99,10 +93,8 @@ public class AppProgram implements Program<AppModel, AppMsg, AppCmd> {
 
         if (model.screen() == AppModel.Screen.DIAGNOSTICS) {
             DiagnosticsPage.Msg diagMsg = null;
-            if (msg instanceof AppMsg.KeyPressed kp) {
-                diagMsg = new DiagnosticsPage.Msg.KeyPressed(kp.key());
-            } else if (msg instanceof AppMsg.MouseScrolled ms) {
-                diagMsg = new DiagnosticsPage.Msg.MouseScrolled(ms.xoffset(), ms.yoffset());
+            if (msg instanceof AppMsg.Intent im) {
+                diagMsg = new DiagnosticsPage.Msg.Intent(im.intent());
             }
 
             if (diagMsg != null) {

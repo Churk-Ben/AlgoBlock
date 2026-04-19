@@ -1,11 +1,12 @@
 package com.algoblock.gl.ui.tea;
 
-import com.algoblock.gl.renderer.RenderFrame;
-import com.algoblock.gl.renderer.TerminalBuffer;
+import com.algoblock.gl.renderer.core.RenderFrame;
+import com.algoblock.gl.renderer.core.TerminalBuffer;
 
 /**
  * The core abstraction of The Elm Architecture (TEA).
- * A Program defines the model state, how it updates based on messages, and how it renders.
+ * A Program defines the model state, how it updates based on messages, and how
+ * it renders.
  */
 public interface Program<M, Msg, Cmd> {
     M init();
