@@ -44,6 +44,9 @@ public class StartPage implements Program<StartPage.Model, StartPage.Msg, StartP
 
         record Exit() implements Cmd {
         }
+
+        record PlaySound(String resourcePath) implements Cmd {
+        }
     }
 
     @Override
@@ -65,11 +68,14 @@ public class StartPage implements Program<StartPage.Model, StartPage.Msg, StartP
                 return new UpdateResult<>(new Model(next), List.of());
             } else if (intent instanceof InputIntent.Submit) {
                 if (model.selectedIndex() == 0) {
-                    return new UpdateResult<>(model, List.of(new Cmd.StartGame()));
+                    return new UpdateResult<>(model,
+                            List.of(new Cmd.StartGame(), new Cmd.PlaySound("/assets/audio/type_in.mp3")));
                 } else if (model.selectedIndex() == 1) {
-                    return new UpdateResult<>(model, List.of(new Cmd.OpenDiagnostics()));
+                    return new UpdateResult<>(model,
+                            List.of(new Cmd.OpenDiagnostics(), new Cmd.PlaySound("/assets/audio/type_in.mp3")));
                 } else {
-                    return new UpdateResult<>(model, List.of(new Cmd.Exit()));
+                    return new UpdateResult<>(model,
+                            List.of(new Cmd.Exit(), new Cmd.PlaySound("/assets/audio/type_in.mp3")));
                 }
             }
         }

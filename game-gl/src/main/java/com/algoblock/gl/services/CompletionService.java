@@ -15,10 +15,10 @@ public class CompletionService {
 
     public List<String> complete(String prefix, Set<String> availableBlocks) {
         return registry.allMeta().stream()
-            .map(BlockMeta::name)
-            .filter(name -> name.startsWith(prefix))
-            .filter(name -> availableBlocks == null || availableBlocks.isEmpty() || availableBlocks.contains(name))
-            .sorted(Comparator.naturalOrder())
+            .filter(meta -> meta.name().startsWith(prefix))
+            .filter(meta -> availableBlocks == null || availableBlocks.isEmpty() || availableBlocks.contains(meta.name()))
+            .sorted(Comparator.comparing(BlockMeta::name))
+            .map(meta -> meta.name() + (meta.arity() > 0 ? "<>" : ""))
             .toList();
     }
 }

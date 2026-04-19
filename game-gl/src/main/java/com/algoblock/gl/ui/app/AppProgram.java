@@ -56,6 +56,8 @@ public class AppProgram implements Program<AppModel, AppMsg, AppCmd> {
                             nextScreen = AppModel.Screen.DIAGNOSTICS;
                         } else if (cmd instanceof StartPage.Cmd.Exit) {
                             commands.add(new AppCmd.Exit());
+                        } else if (cmd instanceof StartPage.Cmd.PlaySound playSound) {
+                            commands.add(new AppCmd.PlaySound(playSound.resourcePath()));
                         }
                     }
                 }
@@ -112,6 +114,8 @@ public class AppProgram implements Program<AppModel, AppMsg, AppCmd> {
                     for (DiagnosticsPage.Cmd cmd : result.commands()) {
                         if (cmd instanceof DiagnosticsPage.Cmd.ReturnToStart) {
                             nextScreen = AppModel.Screen.START;
+                        } else if (cmd instanceof DiagnosticsPage.Cmd.PlaySound playSound) {
+                            commands.add(new AppCmd.PlaySound(playSound.resourcePath()));
                         }
                     }
                 }

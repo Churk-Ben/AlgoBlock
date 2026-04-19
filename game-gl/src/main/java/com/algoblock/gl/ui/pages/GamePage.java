@@ -129,9 +129,11 @@ public class GamePage implements Program<GamePage.Model, GamePage.Msg, GamePage.
                     return new UpdateResult<>(model.withPause(true, next), List.of());
                 } else if (intent instanceof InputIntent.Submit) {
                     if (model.pauseSelectedIndex() == 0) {
-                        return new UpdateResult<>(model.withPause(false, model.pauseSelectedIndex()), List.of());
+                        return new UpdateResult<>(model.withPause(false, model.pauseSelectedIndex()),
+                                List.of(new Cmd.PlaySound("/assets/audio/type_in.mp3")));
                     } else if (model.pauseSelectedIndex() == 1) {
-                        return new UpdateResult<>(model, List.of(new Cmd.ReturnToStart()));
+                        return new UpdateResult<>(model,
+                                List.of(new Cmd.PlaySound("/assets/audio/type_in.mp3"), new Cmd.ReturnToStart()));
                     }
                 }
                 return new UpdateResult<>(model, List.of());
@@ -179,13 +181,16 @@ public class GamePage implements Program<GamePage.Model, GamePage.Msg, GamePage.
                         String nextLine = line.substring(0, cursor - prefix.length()) + selected
                                 + line.substring(cursor);
                         int nextCursor = cursor - prefix.length() + selected.length();
+                        if (selected.endsWith("<>")) {
+                            nextCursor--;
+                        }
 
                         UpdateResult<CompleterComponent.Model, Void> r = CompleterComponent
                                 .update(model.completerModel(), new CompleterComponent.Msg.Hide());
                         Model next = new Model(model.level(), nextLine, nextCursor, model.lastResult(),
                                 model.startEpochSeconds(), System.currentTimeMillis() + CURSOR_SOLID_AFTER_EDIT_MS,
                                 r.model(), model.paused(), model.pauseSelectedIndex());
-                        return new UpdateResult<>(next, List.of());
+                        return new UpdateResult<>(next, List.of(new Cmd.PlaySound("/assets/audio/type_in.mp3")));
                     }
                 }
                 if (intent instanceof InputIntent.MoveCursorLeft || intent instanceof InputIntent.MoveCursorRight
@@ -246,7 +251,7 @@ public class GamePage implements Program<GamePage.Model, GamePage.Msg, GamePage.
                 Model next = new Model(model.level(), line, cursor, model.lastResult(), model.startEpochSeconds(),
                         model.cursorSolidUntilMillis(), model.completerModel(), model.paused(),
                         model.pauseSelectedIndex());
-                return new UpdateResult<>(next, List.of(command));
+                return new UpdateResult<>(next, List.of(command, new Cmd.PlaySound("/assets/audio/type_in.mp3")));
             }
         }
         return new UpdateResult<>(model, List.of());
@@ -313,19 +318,11 @@ public class GamePage implements Program<GamePage.Model, GamePage.Msg, GamePage.
         int cursorRow = Math.min(rows - 1, Math.max(bottomY + 1, inputRow));
 
         if (model.completerModel().active() && !model.paused()) {
-            int innerTop = bottomY + 1;
-            int innerBottom = bottomY + bottomHeight - 2;
-            int spaceBelow = innerBottom - inputRow;
-            int spaceAbove = inputRow - innerTop;
-            boolean drawDown = spaceBelow >= 3 || spaceBelow >= spaceAbove;
-            int availableRows = drawDown ? spaceBelow : spaceAbove;
-            if (availableRows >= 3) {
-                int maxItems = Math.max(1, Math.min(6, availableRows - 2));
-                int topRow = drawDown ? inputRow + 1 : inputRow - (maxItems + 2);
-                int anchorCol = Math.max(2, cursorCol);
-                CompleterComponent.view(model.completerModel(), buffer, anchorCol, topRow, maxItems,
-                        Math.max(18, cols / 3));
-            }
+            int maxItems = Math.max(1, Math.min(10, model.completerModel().items().size()));
+            int topRow = inputRow - (maxItems + 2);
+            int anchorCol = Math.max(2, cursorCol);
+            CompleterComponent.view(model.completerModel(), buffer, anchorCol, topRow, maxItems,
+                    Math.max(18, cols / 3));
         }
 
         List<UiEffect> effects = new ArrayList<>();

@@ -31,6 +31,9 @@ public class DiagnosticsPage implements Program<DiagnosticsPage.Model, Diagnosti
     public sealed interface Cmd {
         record ReturnToStart() implements Cmd {
         }
+
+        record PlaySound(String resourcePath) implements Cmd {
+        }
     }
 
     private final DisplayTestPattern displayTest = new DisplayTestPattern();
@@ -59,11 +62,14 @@ public class DiagnosticsPage implements Program<DiagnosticsPage.Model, Diagnosti
                 } else if (intent instanceof InputIntent.Submit) {
                     if (model.selectedIndex() == 0) {
                         displayTest.reset();
-                        return new UpdateResult<>(new Model(State.DISPLAY_TEST, model.selectedIndex()), List.of());
+                        return new UpdateResult<>(new Model(State.DISPLAY_TEST, model.selectedIndex()),
+                                List.of(new Cmd.PlaySound("/assets/audio/type_in.mp3")));
                     } else if (model.selectedIndex() == 1) {
-                        return new UpdateResult<>(new Model(State.FONT_DIAGNOSTIC, model.selectedIndex()), List.of());
+                        return new UpdateResult<>(new Model(State.FONT_DIAGNOSTIC, model.selectedIndex()),
+                                List.of(new Cmd.PlaySound("/assets/audio/type_in.mp3")));
                     } else if (model.selectedIndex() == 2) {
-                        return new UpdateResult<>(model, List.of(new Cmd.ReturnToStart()));
+                        return new UpdateResult<>(model,
+                                List.of(new Cmd.ReturnToStart(), new Cmd.PlaySound("/assets/audio/type_in.mp3")));
                     }
                 } else if (intent instanceof InputIntent.Cancel) {
                     return new UpdateResult<>(model, List.of(new Cmd.ReturnToStart()));
@@ -71,7 +77,8 @@ public class DiagnosticsPage implements Program<DiagnosticsPage.Model, Diagnosti
             } else {
                 // Inside a test
                 if (intent instanceof InputIntent.Cancel || intent instanceof InputIntent.Submit) {
-                    return new UpdateResult<>(new Model(State.MENU, model.selectedIndex()), List.of());
+                    return new UpdateResult<>(new Model(State.MENU, model.selectedIndex()),
+                            List.of(new Cmd.PlaySound("/assets/audio/type_in.mp3")));
                 }
             }
         }
