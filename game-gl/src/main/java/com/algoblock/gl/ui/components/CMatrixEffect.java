@@ -1,10 +1,30 @@
 package com.algoblock.gl.ui.components;
 
-import com.algoblock.gl.renderer.TerminalBuffer;
 import java.util.Random;
 
+import com.algoblock.gl.renderer.core.TerminalBuffer;
+
 public class CMatrixEffect {
+    // Background color
     private static final int BG = 0x0D1117;
+
+    // Matrix effect parameters
+    private final float minSpeed = 8.0f;
+    private final float maxSpeed = 20.0f;
+    private final int minLength = 5;
+    private final int maxLength = 20;
+    private final float charUpdateProbability = 0.1f;
+    private final int initialDropOffset = 10;
+
+    // Color parameters
+    private final int headColor = 0x55CC55;
+    private final int bodyColor = 0x008800;
+    private final int tailColor = 0x004400;
+    private final int tailStartIndex = 3;
+
+    // Random Charset
+    private final String charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
     private final Random random = new Random();
     private long lastUpdate = 0;
     private Drop[] drops;
@@ -21,7 +41,6 @@ public class CMatrixEffect {
             drops = new Drop[cols];
             for (int i = 0; i < cols; i++) {
                 drops[i] = createDrop(rows);
-                drops[i].y = random.nextInt(rows);
             }
         }
 
@@ -36,7 +55,7 @@ public class CMatrixEffect {
             if (drop.y - drop.length > rows) {
                 drops[i] = createDrop(rows);
             }
-            if (random.nextFloat() < 0.1f) {
+            if (random.nextFloat() < charUpdateProbability) {
                 drop.chars[random.nextInt(drop.length)] = getRandomChar();
             }
         }
@@ -51,9 +70,9 @@ public class CMatrixEffect {
             for (int j = 0; j < drop.length; j++) {
                 int y = headY - j;
                 if (y >= 0 && y < rows) {
-                    int color = (j == 0) ? 0x99FF99 : 0x008800;
-                    if (j > drop.length - 3) {
-                        color = 0x004400;
+                    int color = (j == 0) ? headColor : bodyColor;
+                    if (j > drop.length - tailStartIndex) {
+                        color = tailColor;
                     }
                     buffer.print(i, y, String.valueOf(drop.chars[j]), color, BG);
                 }
@@ -63,9 +82,9 @@ public class CMatrixEffect {
 
     private Drop createDrop(int rows) {
         Drop drop = new Drop();
-        drop.y = -random.nextInt(10);
-        drop.speed = 8 + random.nextFloat() * 12;
-        drop.length = 5 + random.nextInt(15);
+        drop.y = -random.nextInt(initialDropOffset);
+        drop.speed = minSpeed + random.nextFloat() * (maxSpeed - minSpeed);
+        drop.length = minLength + random.nextInt(maxLength - minLength);
         drop.chars = new char[drop.length];
         for (int i = 0; i < drop.length; i++) {
             drop.chars[i] = getRandomChar();
@@ -74,7 +93,6 @@ public class CMatrixEffect {
     }
 
     private char getRandomChar() {
-        final String glyphs = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-        return glyphs.charAt(random.nextInt(glyphs.length()));
+        return charset.charAt(random.nextInt(charset.length()));
     }
 }
