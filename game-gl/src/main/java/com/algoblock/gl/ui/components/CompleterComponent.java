@@ -6,6 +6,12 @@ import com.algoblock.gl.ui.tea.UpdateResult;
 import java.util.List;
 
 public class CompleterComponent {
+    private static final int BG = 0x0D1117;
+    private static final int BORDER = 0x555555;
+    private static final int FG = 0xCDD9E5;
+    private static final int SELECTED_FG = 0xFFFFFF;
+    private static final int SELECTED_BG = 0x1F6FEB;
+
     public record Model(
             boolean active,
             List<String> items,
@@ -53,25 +59,68 @@ public class CompleterComponent {
         return new UpdateResult<>(model, List.of());
     }
 
-    public static void view(Model model, TerminalBuffer buffer, int startCol, int startRow) {
+    public static void view(Model model, TerminalBuffer buffer, int startCol, int startRow, int maxItems,
+            int maxWidth) {
         if (!model.active() || model.items().isEmpty()) {
             return;
         }
 
-        int limit = Math.min(6, model.items().size());
-        for (int i = 0; i < limit; i++) {
-            if (startRow + i >= buffer.rows()) {
-                break;
+        int rows = buffer.rows();
+        int cols = buffer.cols();
+        if (rows <= 0 || cols <= 0) {
+            return;
+        }
+
+        int visibleCount = Math.max(1, Math.min(maxItems, model.items().size()));
+        int longest = 0;
+        for (int i = 0; i < visibleCount; i++) {
+            longest = Math.max(longest, model.items().get(i).length());
+        }
+
+        int widthCap = Math.max(16, maxWidth);
+        int width = Math.min(widthCap, Math.max(18, longest + 4));
+        width = Math.min(width, cols);
+        if (width < 4) {
+            return;
+        }
+        int height = visibleCount + 2;
+        if (height > rows) {
+            return;
+        }
+
+        int x = Math.max(0, Math.min(startCol, cols - width));
+        int y = Math.max(0, Math.min(startRow, rows - height));
+        PanelComponent.drawBox(buffer, x, y, width, height, BORDER, BG);
+
+        for (int i = 0; i < visibleCount; i++) {
+            int row = y + 1 + i;
+            if (row < 0 || row >= rows) {
+                continue;
             }
             String item = model.items().get(i);
             boolean selected = (i == model.selectedIndex());
-
-            int bg = selected ? 0x3A3D41 : 0x1E1E1E;
-            int fg = selected ? 0xFFFFFF : 0xCDD9E5;
-
-            // Render the item with padding
-            String displayText = " " + item + " ";
-            buffer.print(startCol, startRow + i, displayText, fg, bg);
+            int fg = selected ? SELECTED_FG : FG;
+            int bg = selected ? SELECTED_BG : BG;
+            String display = (selected ? "> " : "  ") + item;
+            if (display.length() > width - 2) {
+                if (width - 2 >= 2) {
+                    display = display.substring(0, width - 3) + "...";
+                } else {
+                    display = display.substring(0, width - 2);
+                }
+            }
+            buffer.print(x + 1, row, padRight(display, width - 2), fg, bg);
         }
+    }
+
+    private static String padRight(String text, int width) {
+        if (text.length() >= width) {
+            return text;
+        }
+        StringBuilder sb = new StringBuilder(text);
+        while (sb.length() < width) {
+            sb.append(' ');
+        }
+        return sb.toString();
     }
 }

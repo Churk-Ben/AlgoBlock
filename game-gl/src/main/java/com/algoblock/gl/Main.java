@@ -23,18 +23,18 @@ import com.algoblock.core.engine.BlockRegistry;
 import com.algoblock.core.engine.GameCoreService;
 import com.algoblock.core.levels.Level;
 import com.algoblock.core.levels.LevelLoader;
-import com.algoblock.gl.input.CharEvent;
 import com.algoblock.gl.input.GlfwInputAdapter;
-import com.algoblock.gl.input.InputEvent;
 import com.algoblock.gl.input.InputEventQueue;
-import com.algoblock.gl.input.KeyEvent;
-import com.algoblock.gl.input.WheelEvent;
-import com.algoblock.gl.renderer.CursorRenderer;
-import com.algoblock.gl.renderer.EffectsRenderer;
-import com.algoblock.gl.renderer.FontAtlas;
-import com.algoblock.gl.renderer.RenderFrame;
-import com.algoblock.gl.renderer.TerminalBuffer;
-import com.algoblock.gl.renderer.TextRenderer;
+import com.algoblock.gl.input.event.InputEvent;
+import com.algoblock.gl.input.intent.IntentEnvelope;
+import com.algoblock.gl.input.intent.InputIntentMapper;
+import com.algoblock.gl.input.intent.InputIntentQueue;
+import com.algoblock.gl.renderer.core.RenderFrame;
+import com.algoblock.gl.renderer.core.TerminalBuffer;
+import com.algoblock.gl.renderer.cursor.CursorRenderer;
+import com.algoblock.gl.renderer.effect.EffectsRenderer;
+import com.algoblock.gl.renderer.text.FontAtlas;
+import com.algoblock.gl.renderer.text.TextRenderer;
 import com.algoblock.gl.services.CompletionService;
 import com.algoblock.gl.ui.app.AppCmd;
 import com.algoblock.gl.ui.app.AppCmdHandler;
@@ -45,7 +45,8 @@ import com.algoblock.gl.ui.pages.GamePage;
 import com.algoblock.gl.ui.pages.StartPage;
 import com.algoblock.gl.ui.pages.diagnostics.DiagnosticsPage;
 import com.algoblock.gl.ui.tea.TeaRuntime;
-// import java.util.Arrays;
+
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.lwjgl.system.MemoryStack;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -94,6 +95,7 @@ public class Main {
 
         TeaRuntime<AppModel, AppMsg, AppCmd> uiRuntime = new TeaRuntime<>(program, cmdHandler);
         InputEventQueue eventQueue = new InputEventQueue();
+        InputIntentQueue intentQueue = new InputIntentQueue();
         GlfwInputAdapter inputAdapter = new GlfwInputAdapter(eventQueue);
         inputAdapter.attach(window);
 
@@ -101,12 +103,17 @@ public class Main {
             while (!glfwWindowShouldClose(window)) {
                 try {
                     InputEvent event = eventQueue.take();
-                    if (event instanceof CharEvent c) {
-                        uiRuntime.dispatch(new AppMsg.CharTyped(c.value()));
-                    } else if (event instanceof KeyEvent k) {
-                        uiRuntime.dispatch(new AppMsg.KeyPressed(k.key()));
-                    } else if (event instanceof WheelEvent w) {
-                        uiRuntime.dispatch(new AppMsg.MouseScrolled(w.xoffset(), w.yoffset()));
+                    long nowMillis = System.currentTimeMillis();
+                    List<IntentEnvelope> mappedIntents = InputIntentMapper.map(event, nowMillis);
+                    for (IntentEnvelope envelope : mappedIntents) {
+                        intentQueue.offer(envelope);
+                    }
+
+                    for (int i = 0; i < mappedIntents.size(); i++) {
+                        IntentEnvelope envelope = intentQueue.take();
+                        if (!envelope.isExpired(System.currentTimeMillis())) {
+                            uiRuntime.dispatch(new AppMsg.Intent(envelope.intent()));
+                        }
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -165,7 +172,7 @@ public class Main {
 
         while (!glfwWindowShouldClose(window)) {
             org.lwjgl.glfw.GLFW.glfwWaitEventsTimeout(0.1);
-            glfwSetWindowTitle(window, "AlgoBlock  t=" + String.format("%.1f", glfwGetTime()));
+            glfwSetWindowTitle(window, "AlgoBlock");
         }
 
         try {

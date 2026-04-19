@@ -77,16 +77,19 @@ public class AppProgram implements Program<AppModel, AppMsg, AppCmd> {
             if (gameMsg != null) {
                 UpdateResult<GamePage.Model, GamePage.Cmd> result = gamePage.update(model.gameModel(), gameMsg);
                 List<AppCmd> commands = new ArrayList<>();
+                AppModel.Screen nextScreen = model.screen();
                 if (result.commands() != null) {
                     for (GamePage.Cmd cmd : result.commands()) {
                         if (cmd instanceof GamePage.Cmd.Submit submit) {
                             commands.add(new AppCmd.Submit(submit.level(), submit.source(), submit.elapsedSeconds()));
                         } else if (cmd instanceof GamePage.Cmd.PlaySound playSound) {
                             commands.add(new AppCmd.PlaySound(playSound.resourcePath()));
+                        } else if (cmd instanceof GamePage.Cmd.ReturnToStart) {
+                            nextScreen = AppModel.Screen.START;
                         }
                     }
                 }
-                AppModel nextModel = new AppModel(model.screen(), model.startModel(), result.model(),
+                AppModel nextModel = new AppModel(nextScreen, model.startModel(), result.model(),
                         model.diagnosticsModel(), model.currentLevel());
                 return new UpdateResult<>(nextModel, commands);
             }

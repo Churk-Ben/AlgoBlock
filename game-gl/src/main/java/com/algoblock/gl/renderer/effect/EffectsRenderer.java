@@ -30,15 +30,20 @@ public class EffectsRenderer {
         }
 
         float crtStrength = 0f;
+        float dimOpacity = 0f;
+        UiEffect.Dim activeDim = null;
         GlitchState glitch = null;
         for (UiEffect effect : frame.effects()) {
             if (effect instanceof UiEffect.Crt crt) {
                 crtStrength = Math.max(crtStrength, crt.strength());
             } else if (effect instanceof UiEffect.Glitch glitchEffect) {
                 glitch = glitchEffect.state();
+            } else if (effect instanceof UiEffect.Dim dimEffect) {
+                dimOpacity = Math.max(dimOpacity, dimEffect.opacity());
+                activeDim = dimEffect;
             }
         }
-        if (crtStrength <= 0f && glitch == null) {
+        if (crtStrength <= 0f && glitch == null && dimOpacity <= 0f) {
             return;
         }
 
@@ -50,6 +55,60 @@ public class EffectsRenderer {
         glOrtho(0.0, viewportWidth, viewportHeight, 0.0, -1.0, 1.0);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
+
+        if (dimOpacity > 0f && activeDim != null) {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glBegin(GL_QUADS);
+            glColor4f(0f, 0f, 0f, dimOpacity);
+
+            float cellWidth = textRenderer.cellWidthPx();
+            float cellHeight = textRenderer.cellHeightPx();
+            int cols = frame.textBuffer() != null ? frame.textBuffer().cols() : 0;
+            int rows = frame.textBuffer() != null ? frame.textBuffer().rows() : 0;
+            float marginX = textRenderer.gridOffsetXPx(cols);
+            float marginY = textRenderer.gridOffsetYPx(rows);
+
+            if (activeDim.excludeWidth() > 0 && activeDim.excludeHeight() > 0) {
+                float exX = marginX + activeDim.excludeX() * cellWidth;
+                float exY = marginY + activeDim.excludeY() * cellHeight;
+                float exW = activeDim.excludeWidth() * cellWidth;
+                float exH = activeDim.excludeHeight() * cellHeight;
+
+                // Top quad
+                glVertex2f(0f, 0f);
+                glVertex2f(viewportWidth, 0f);
+                glVertex2f(viewportWidth, exY);
+                glVertex2f(0f, exY);
+
+                // Bottom quad
+                glVertex2f(0f, exY + exH);
+                glVertex2f(viewportWidth, exY + exH);
+                glVertex2f(viewportWidth, viewportHeight);
+                glVertex2f(0f, viewportHeight);
+
+                // Left quad
+                glVertex2f(0f, exY);
+                glVertex2f(exX, exY);
+                glVertex2f(exX, exY + exH);
+                glVertex2f(0f, exY + exH);
+
+                // Right quad
+                glVertex2f(exX + exW, exY);
+                glVertex2f(viewportWidth, exY);
+                glVertex2f(viewportWidth, exY + exH);
+                glVertex2f(exX + exW, exY + exH);
+            } else {
+                // Full screen dim
+                glVertex2f(0f, 0f);
+                glVertex2f(viewportWidth, 0f);
+                glVertex2f(viewportWidth, viewportHeight);
+                glVertex2f(0f, viewportHeight);
+            }
+
+            glEnd();
+            glDisable(GL_BLEND);
+        }
 
         if (crtStrength > 0f) {
             float animated = (float) ((Math.sin(timeSeconds * 1.7) + 1.0) * 0.5);
