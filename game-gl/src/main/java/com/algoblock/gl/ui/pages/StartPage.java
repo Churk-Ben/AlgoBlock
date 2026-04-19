@@ -1,7 +1,7 @@
 package com.algoblock.gl.ui.pages;
 
 import com.algoblock.gl.input.intent.InputIntent;
-import com.algoblock.gl.ui.effect.CMatrixEffect;
+import com.algoblock.gl.ui.components.CMatrixComponent;
 import com.algoblock.gl.ui.effect.GlitchEffect;
 import com.algoblock.gl.ui.tea.Program;
 import com.algoblock.gl.ui.tea.UpdateResult;
@@ -18,7 +18,7 @@ import java.util.Random;
 public class StartPage implements Program<StartPage.Model, StartPage.Msg, StartPage.Cmd> {
 
     private static final int BG = 0x0D1117;
-    private final CMatrixEffect cmatrix = new CMatrixEffect();
+    private final CMatrixComponent cmatrix = new CMatrixComponent();
     private final GlitchEffect glitchEffect = new GlitchEffect();
     private final String[] titleArt = loadRandomTitleArt();
 

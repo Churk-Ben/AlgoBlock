@@ -3,7 +3,7 @@ package com.algoblock.gl.ui.pages.diagnostics;
 import com.algoblock.gl.input.intent.InputIntent;
 import com.algoblock.gl.renderer.core.RenderFrame;
 import com.algoblock.gl.renderer.core.TerminalBuffer;
-import com.algoblock.gl.ui.effect.CMatrixEffect;
+import com.algoblock.gl.ui.components.CMatrixComponent;
 import com.algoblock.gl.ui.tea.Program;
 import com.algoblock.gl.ui.tea.UpdateResult;
 
@@ -35,7 +35,7 @@ public class DiagnosticsPage implements Program<DiagnosticsPage.Model, Diagnosti
 
     private final DisplayTestPattern displayTest = new DisplayTestPattern();
     private final FontDiagnosticTestPattern fontDiag = new FontDiagnosticTestPattern();
-    private final CMatrixEffect cmatrix = new CMatrixEffect();
+    private final CMatrixComponent cmatrix = new CMatrixComponent();
     private static final int BG = 0x0D1117;
 
     @Override

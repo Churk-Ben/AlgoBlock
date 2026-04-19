@@ -1,14 +1,12 @@
-package com.algoblock.gl.ui.effect;
+package com.algoblock.gl.ui.components;
 
 import java.util.Random;
 
 import com.algoblock.gl.renderer.core.TerminalBuffer;
 
-public class CMatrixEffect {
-    // Background color
+public class CMatrixComponent {
     private static final int BG = 0x0D1117;
 
-    // Matrix effect parameters
     private final float minSpeed = 8.0f;
     private final float maxSpeed = 20.0f;
     private final int minLength = 5;
@@ -16,13 +14,11 @@ public class CMatrixEffect {
     private final float charUpdateProbability = 0.1f;
     private final int initialDropOffset = 10;
 
-    // Color parameters
     private final int headColor = 0x55CC55;
     private final int bodyColor = 0x008800;
     private final int tailColor = 0x004400;
     private final int tailStartIndex = 3;
 
-    // Random Charset
     private final String charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     private final Random random = new Random();
@@ -59,8 +55,9 @@ public class CMatrixEffect {
         }
 
         long dt = nowMillis - lastUpdate;
-        if (lastUpdate == 0)
+        if (lastUpdate == 0) {
             dt = 0;
+        }
         lastUpdate = nowMillis;
 
         for (int i = 0; i < cols; i++) {
