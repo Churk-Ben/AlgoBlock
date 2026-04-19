@@ -1,4 +1,6 @@
-package com.algoblock.gl.renderer;
+package com.algoblock.gl.renderer.test;
+
+import com.algoblock.gl.renderer.TerminalBuffer;
 
 public class FontDiagnosticTestPattern {
     public void renderTo(TerminalBuffer buffer, double timeSeconds) {

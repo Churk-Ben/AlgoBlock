@@ -1,4 +1,7 @@
-package com.algoblock.gl.renderer;
+package com.algoblock.gl.renderer.test;
+
+import com.algoblock.gl.renderer.RenderFrame;
+import com.algoblock.gl.renderer.TerminalBuffer;
 
 public class DisplayTestPattern {
     private static final double CHECKERBOARD_VARIANT_SECONDS = 1.0;
