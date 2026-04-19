@@ -18,11 +18,11 @@ public class StartPage implements Program<StartPage.Model, StartPage.Msg, StartP
     private final String[] titleArt = loadRandomTitleArt();
 
     private static final String[] FALLBACK_TITLE_ART = {
-            " _______ __               ______ __              __    ",
-            "|   _   |  |.-----.-----.|   __ \\  |.-----.----.|  |--.",
-            "|       |  ||  _  |  _  ||   __ <  ||  _  |  __||    < ",
-            "|___|___|__||___  |_____||______/__||_____|____||__|__|",
-            "            |_____|                                    "
+            "   _______ __               ______ __              __      ",
+            "  |   _   |  |.-----.-----.|   __ \\  |.-----.----.|  |--.  ",
+            "  |       |  ||  _  |  _  ||   __ <  ||  _  |  __||    <   ",
+            "  |___|___|__||___  |_____||______/__||_____|____||__|__|  ",
+            "              |_____|                                      "
     };
 
     public record Model() {
@@ -85,7 +85,7 @@ public class StartPage implements Program<StartPage.Model, StartPage.Msg, StartP
         int placeholderCol = (cols - placeholderText.length()) / 2;
         buffer.print(Math.max(0, placeholderCol), optionsStartRow + 2, placeholderText, 0x888888, BG);
 
-        return new RenderFrame(buffer, -1, -1, false, false, 0, 0f);
+        return new RenderFrame(buffer, -1, -1, false, false, 0, 0.3f);
     }
 
     private static final String[] TITLE_RESOURCES = {
@@ -170,9 +170,9 @@ public class StartPage implements Program<StartPage.Model, StartPage.Msg, StartP
                 for (int j = 0; j < drop.length; j++) {
                     int y = headY - j;
                     if (y >= 0 && y < rows) {
-                        int color = (j == 0) ? 0xFFFFFF : 0x00FF00;
+                        int color = (j == 0) ? 0x99FF99 : 0x008800;
                         if (j > drop.length - 3) {
-                            color = 0x008800;
+                            color = 0x004400;
                         }
                         buffer.print(i, y, String.valueOf(drop.chars[j]), color, BG);
                     }
@@ -183,7 +183,7 @@ public class StartPage implements Program<StartPage.Model, StartPage.Msg, StartP
         private Drop createDrop(int rows) {
             Drop drop = new Drop();
             drop.y = -random.nextInt(10);
-            drop.speed = 10 + random.nextFloat() * 15;
+            drop.speed = 8 + random.nextFloat() * 12;
             drop.length = 5 + random.nextInt(15);
             drop.chars = new char[drop.length];
             for (int i = 0; i < drop.length; i++) {

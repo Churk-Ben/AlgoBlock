@@ -19,6 +19,17 @@ import static org.lwjgl.opengl.GL11.glVertex2f;
 import static org.lwjgl.opengl.GL11.glViewport;
 
 public class EffectsRenderer {
+    private double nextGlitchEvalTime = 0;
+    private double glitchEndTime = 0;
+    private boolean isGlitching = false;
+    private float glitchOffset1 = 0;
+    private float glitchOffset2 = 0;
+    private float glitchY1 = 0;
+    private float glitchH1 = 0;
+    private float glitchY2 = 0;
+    private float glitchH2 = 0;
+    private int screenTexture = 0;
+
     public void draw(RenderFrame frame, TextRenderer textRenderer, double timeSeconds) {
         if (frame == null || frame.effectStrength() <= 0f) {
             return;
@@ -35,7 +46,8 @@ public class EffectsRenderer {
 
         float strength = frame.effectStrength();
         float animated = (float) ((Math.sin(timeSeconds * 1.7) + 1.0) * 0.5);
-        float stripeAlpha = Math.max(0.02f, strength * 0.12f);
+        // Make stripe (scanline) effect more prominent
+        float stripeAlpha = Math.max(0.05f, strength * 0.25f);
         float vignetteAlpha = Math.max(0.03f, strength * 0.16f) * (0.7f + animated * 0.3f);
         float stripeStep = Math.max(2f, textRenderer.cellHeightPx() * 0.75f);
 
@@ -75,5 +87,95 @@ public class EffectsRenderer {
         glEnd();
 
         glDisable(GL_BLEND);
+
+        // --- Glitch Effect Logic ---
+        if (timeSeconds >= nextGlitchEvalTime) {
+            nextGlitchEvalTime = timeSeconds + 1.0;
+            if (Math.random() < 0.5) {
+                isGlitching = true;
+                glitchEndTime = timeSeconds + 0.1 + Math.random() * 0.15; // 0.1s ~ 0.25s duration
+
+                glitchY1 = (float) Math.random() * viewportHeight;
+                glitchH1 = 10f + (float) Math.random() * 30f;
+                glitchOffset1 = (float) (Math.random() * 60 - 30);
+
+                glitchY2 = (float) Math.random() * viewportHeight;
+                glitchH2 = 5f + (float) Math.random() * 15f;
+                glitchOffset2 = (float) (Math.random() * 40 - 20);
+            }
+        }
+
+        if (isGlitching && timeSeconds > glitchEndTime) {
+            isGlitching = false;
+        }
+
+        if (isGlitching) {
+            if (screenTexture == 0) {
+                screenTexture = org.lwjgl.opengl.GL11.glGenTextures();
+                org.lwjgl.opengl.GL11.glBindTexture(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, screenTexture);
+                org.lwjgl.opengl.GL11.glTexParameteri(org.lwjgl.opengl.GL11.GL_TEXTURE_2D,
+                        org.lwjgl.opengl.GL11.GL_TEXTURE_MIN_FILTER, org.lwjgl.opengl.GL11.GL_NEAREST);
+                org.lwjgl.opengl.GL11.glTexParameteri(org.lwjgl.opengl.GL11.GL_TEXTURE_2D,
+                        org.lwjgl.opengl.GL11.GL_TEXTURE_MAG_FILTER, org.lwjgl.opengl.GL11.GL_NEAREST);
+                org.lwjgl.opengl.GL11.glTexParameteri(org.lwjgl.opengl.GL11.GL_TEXTURE_2D,
+                        org.lwjgl.opengl.GL11.GL_TEXTURE_WRAP_S, org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE);
+                org.lwjgl.opengl.GL11.glTexParameteri(org.lwjgl.opengl.GL11.GL_TEXTURE_2D,
+                        org.lwjgl.opengl.GL11.GL_TEXTURE_WRAP_T, org.lwjgl.opengl.GL12.GL_CLAMP_TO_EDGE);
+                org.lwjgl.opengl.GL11.glBindTexture(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, 0);
+            }
+
+            org.lwjgl.opengl.GL11.glBindTexture(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, screenTexture);
+            // Copy current screen content into texture
+            org.lwjgl.opengl.GL11.glCopyTexImage2D(org.lwjgl.opengl.GL11.GL_TEXTURE_2D, 0, org.lwjgl.opengl.GL11.GL_RGB,
+                    0, 0, viewportWidth, viewportHeight, 0);
+
+            org.lwjgl.opengl.GL11.glEnable(org.lwjgl.opengl.GL11.GL_TEXTURE_2D);
+            org.lwjgl.opengl.GL11.glDisable(org.lwjgl.opengl.GL11.GL_BLEND);
+
+            drawGlitchStrip(viewportWidth, viewportHeight, glitchY1, glitchH1, glitchOffset1);
+            drawGlitchStrip(viewportWidth, viewportHeight, glitchY2, glitchH2, glitchOffset2);
+
+            org.lwjgl.opengl.GL11.glDisable(org.lwjgl.opengl.GL11.GL_TEXTURE_2D);
+        }
+    }
+
+    private void drawGlitchStrip(int vw, int vh, float sy, float sh, float offset) {
+        float vTop = (vh - sy) / (float) vh;
+        float vBottom = (vh - (sy + sh)) / (float) vh;
+
+        // Chromatic aberration by rendering channels with slight horizontal offsets
+        // Red channel
+        org.lwjgl.opengl.GL11.glColorMask(true, false, false, true);
+        drawStripQuad(vw, vh, sy, sh, offset + 4f, vTop, vBottom);
+
+        // Green channel
+        org.lwjgl.opengl.GL11.glColorMask(false, true, false, true);
+        drawStripQuad(vw, vh, sy, sh, offset, vTop, vBottom);
+
+        // Blue channel
+        org.lwjgl.opengl.GL11.glColorMask(false, false, true, true);
+        drawStripQuad(vw, vh, sy, sh, offset - 4f, vTop, vBottom);
+
+        // Restore color mask
+        org.lwjgl.opengl.GL11.glColorMask(true, true, true, true);
+    }
+
+    private void drawStripQuad(int vw, int vh, float sy, float sh, float offset, float vTop, float vBottom) {
+        org.lwjgl.opengl.GL11.glColor4f(1f, 1f, 1f, 1f);
+        org.lwjgl.opengl.GL11.glBegin(org.lwjgl.opengl.GL11.GL_QUADS);
+
+        org.lwjgl.opengl.GL11.glTexCoord2f(0f, vTop);
+        org.lwjgl.opengl.GL11.glVertex2f(offset, sy);
+
+        org.lwjgl.opengl.GL11.glTexCoord2f(1f, vTop);
+        org.lwjgl.opengl.GL11.glVertex2f(vw + offset, sy);
+
+        org.lwjgl.opengl.GL11.glTexCoord2f(1f, vBottom);
+        org.lwjgl.opengl.GL11.glVertex2f(vw + offset, sy + sh);
+
+        org.lwjgl.opengl.GL11.glTexCoord2f(0f, vBottom);
+        org.lwjgl.opengl.GL11.glVertex2f(offset, sy + sh);
+
+        org.lwjgl.opengl.GL11.glEnd();
     }
 }
