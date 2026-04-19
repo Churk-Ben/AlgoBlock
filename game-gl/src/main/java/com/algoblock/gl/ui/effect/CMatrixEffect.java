@@ -37,11 +37,25 @@ public class CMatrixEffect {
     }
 
     public void update(int cols, int rows, long nowMillis) {
-        if (drops == null || drops.length != cols) {
+        if (cols <= 0 || rows <= 0) {
+            drops = new Drop[0];
+            lastUpdate = nowMillis;
+            return;
+        }
+
+        if (drops == null) {
             drops = new Drop[cols];
             for (int i = 0; i < cols; i++) {
-                drops[i] = createDrop(rows);
+                drops[i] = createDrop(rows, true);
             }
+        } else if (drops.length != cols) {
+            Drop[] resized = new Drop[cols];
+            int keep = Math.min(drops.length, cols);
+            System.arraycopy(drops, 0, resized, 0, keep);
+            for (int i = keep; i < cols; i++) {
+                resized[i] = createDrop(rows, true);
+            }
+            drops = resized;
         }
 
         long dt = nowMillis - lastUpdate;
@@ -53,7 +67,7 @@ public class CMatrixEffect {
             Drop drop = drops[i];
             drop.y += drop.speed * (dt / 1000f);
             if (drop.y - drop.length > rows) {
-                drops[i] = createDrop(rows);
+                drops[i] = createDrop(rows, false);
             }
             if (random.nextFloat() < charUpdateProbability) {
                 drop.chars[random.nextInt(drop.length)] = getRandomChar();
@@ -62,6 +76,9 @@ public class CMatrixEffect {
     }
 
     public void render(TerminalBuffer buffer) {
+        if (drops == null || drops.length == 0) {
+            return;
+        }
         int rows = buffer.rows();
         int cols = buffer.cols();
         for (int i = 0; i < cols; i++) {
@@ -80,11 +97,16 @@ public class CMatrixEffect {
         }
     }
 
-    private Drop createDrop(int rows) {
+    private Drop createDrop(int rows, boolean scatterAcrossScreen) {
         Drop drop = new Drop();
-        drop.y = -random.nextInt(initialDropOffset);
         drop.speed = minSpeed + random.nextFloat() * (maxSpeed - minSpeed);
         drop.length = minLength + random.nextInt(maxLength - minLength);
+        if (scatterAcrossScreen) {
+            int span = Math.max(1, rows + drop.length + initialDropOffset);
+            drop.y = random.nextInt(span) - drop.length;
+        } else {
+            drop.y = -random.nextInt(initialDropOffset);
+        }
         drop.chars = new char[drop.length];
         for (int i = 0; i < drop.length; i++) {
             drop.chars[i] = getRandomChar();
