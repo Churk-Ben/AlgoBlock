@@ -30,6 +30,9 @@ public class GamePage implements Program<GamePage.Model, GamePage.Msg, GamePage.
     private static final int MIDDLE_MIN_HEIGHT = 5;
     private static final long CURSOR_SOLID_AFTER_EDIT_MS = 800L;
 
+    private static final String SFX_TYPE_IN = "/assets/audio/sfx/type-in.mp3";
+    private static final String SFX_INTERACT = "/assets/audio/sfx/interact.mp3";
+
     private final SyntaxHighlighter highlighter = new SyntaxHighlighter();
     private final CompletionService completionService;
 
@@ -110,7 +113,7 @@ public class GamePage implements Program<GamePage.Model, GamePage.Msg, GamePage.
             long solidUntil = System.currentTimeMillis() + CURSOR_SOLID_AFTER_EDIT_MS;
             Model next = new Model(model.level(), nextLine, cursor + 1, model.lastResult(), model.startEpochSeconds(),
                     solidUntil, completerResult.model(), model.paused(), model.pauseSelectedIndex());
-            return new UpdateResult<>(next, List.of(new Cmd.PlaySound("/assets/audio/type_in.mp3")));
+            return new UpdateResult<>(next, List.of(new Cmd.PlaySound(SFX_TYPE_IN)));
         }
 
         if (msg instanceof Msg.Intent intentMsg) {
@@ -123,17 +126,17 @@ public class GamePage implements Program<GamePage.Model, GamePage.Msg, GamePage.
                     int next = model.pauseSelectedIndex() - 1;
                     if (next < 0)
                         next = 1;
-                    return new UpdateResult<>(model.withPause(true, next), List.of());
+                    return new UpdateResult<>(model.withPause(true, next), List.of(new Cmd.PlaySound(SFX_INTERACT)));
                 } else if (intent instanceof InputIntent.NavigateNext) {
                     int next = (model.pauseSelectedIndex() + 1) % 2;
-                    return new UpdateResult<>(model.withPause(true, next), List.of());
+                    return new UpdateResult<>(model.withPause(true, next), List.of(new Cmd.PlaySound(SFX_INTERACT)));
                 } else if (intent instanceof InputIntent.Submit) {
                     if (model.pauseSelectedIndex() == 0) {
                         return new UpdateResult<>(model.withPause(false, model.pauseSelectedIndex()),
-                                List.of(new Cmd.PlaySound("/assets/audio/type_in.mp3")));
+                                List.of(new Cmd.PlaySound(SFX_TYPE_IN)));
                     } else if (model.pauseSelectedIndex() == 1) {
                         return new UpdateResult<>(model,
-                                List.of(new Cmd.PlaySound("/assets/audio/type_in.mp3"), new Cmd.ReturnToStart()));
+                                List.of(new Cmd.PlaySound(SFX_TYPE_IN), new Cmd.ReturnToStart()));
                     }
                 }
                 return new UpdateResult<>(model, List.of());
@@ -161,12 +164,14 @@ public class GamePage implements Program<GamePage.Model, GamePage.Msg, GamePage.
                 if (intent instanceof InputIntent.NavigatePrev) {
                     UpdateResult<CompleterComponent.Model, Void> r = CompleterComponent.update(model.completerModel(),
                             new CompleterComponent.Msg.Prev());
-                    return new UpdateResult<>(model.withCompleterModel(r.model()), List.of());
+                    return new UpdateResult<>(model.withCompleterModel(r.model()),
+                            List.of(new Cmd.PlaySound(SFX_INTERACT)));
                 }
                 if (intent instanceof InputIntent.NavigateNext) {
                     UpdateResult<CompleterComponent.Model, Void> r = CompleterComponent.update(model.completerModel(),
                             new CompleterComponent.Msg.Next());
-                    return new UpdateResult<>(model.withCompleterModel(r.model()), List.of());
+                    return new UpdateResult<>(model.withCompleterModel(r.model()),
+                            List.of(new Cmd.PlaySound(SFX_INTERACT)));
                 }
                 if (intent instanceof InputIntent.Submit || intent instanceof InputIntent.Tab) {
                     // Confirm selection
@@ -190,7 +195,7 @@ public class GamePage implements Program<GamePage.Model, GamePage.Msg, GamePage.
                         Model next = new Model(model.level(), nextLine, nextCursor, model.lastResult(),
                                 model.startEpochSeconds(), System.currentTimeMillis() + CURSOR_SOLID_AFTER_EDIT_MS,
                                 r.model(), model.paused(), model.pauseSelectedIndex());
-                        return new UpdateResult<>(next, List.of(new Cmd.PlaySound("/assets/audio/type_in.mp3")));
+                        return new UpdateResult<>(next, List.of(new Cmd.PlaySound(SFX_TYPE_IN)));
                     }
                 }
                 if (intent instanceof InputIntent.MoveCursorLeft || intent instanceof InputIntent.MoveCursorRight
@@ -251,7 +256,7 @@ public class GamePage implements Program<GamePage.Model, GamePage.Msg, GamePage.
                 Model next = new Model(model.level(), line, cursor, model.lastResult(), model.startEpochSeconds(),
                         model.cursorSolidUntilMillis(), model.completerModel(), model.paused(),
                         model.pauseSelectedIndex());
-                return new UpdateResult<>(next, List.of(command, new Cmd.PlaySound("/assets/audio/type_in.mp3")));
+                return new UpdateResult<>(next, List.of(command, new Cmd.PlaySound(SFX_TYPE_IN)));
             }
         }
         return new UpdateResult<>(model, List.of());

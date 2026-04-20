@@ -41,6 +41,9 @@ public class DiagnosticsPage implements Program<DiagnosticsPage.Model, Diagnosti
     private final CMatrixComponent cmatrix = new CMatrixComponent();
     private static final int BG = 0x0D1117;
 
+    private static final String SFX_TYPE_IN = "/assets/audio/sfx/type-in.mp3";
+    private static final String SFX_INTERACT = "/assets/audio/sfx/interact.mp3";
+
     @Override
     public Model init() {
         return Model.init();
@@ -55,21 +58,21 @@ public class DiagnosticsPage implements Program<DiagnosticsPage.Model, Diagnosti
                     int next = model.selectedIndex() - 1;
                     if (next < 0)
                         next = 2;
-                    return new UpdateResult<>(new Model(State.MENU, next), List.of());
+                    return new UpdateResult<>(new Model(State.MENU, next), List.of(new Cmd.PlaySound(SFX_INTERACT)));
                 } else if (intent instanceof InputIntent.NavigateNext) {
                     int next = (model.selectedIndex() + 1) % 3;
-                    return new UpdateResult<>(new Model(State.MENU, next), List.of());
+                    return new UpdateResult<>(new Model(State.MENU, next), List.of(new Cmd.PlaySound(SFX_INTERACT)));
                 } else if (intent instanceof InputIntent.Submit) {
                     if (model.selectedIndex() == 0) {
                         displayTest.reset();
                         return new UpdateResult<>(new Model(State.DISPLAY_TEST, model.selectedIndex()),
-                                List.of(new Cmd.PlaySound("/assets/audio/type_in.mp3")));
+                                List.of(new Cmd.PlaySound(SFX_TYPE_IN)));
                     } else if (model.selectedIndex() == 1) {
                         return new UpdateResult<>(new Model(State.FONT_DIAGNOSTIC, model.selectedIndex()),
-                                List.of(new Cmd.PlaySound("/assets/audio/type_in.mp3")));
+                                List.of(new Cmd.PlaySound(SFX_TYPE_IN)));
                     } else if (model.selectedIndex() == 2) {
                         return new UpdateResult<>(model,
-                                List.of(new Cmd.ReturnToStart(), new Cmd.PlaySound("/assets/audio/type_in.mp3")));
+                                List.of(new Cmd.ReturnToStart(), new Cmd.PlaySound(SFX_TYPE_IN)));
                     }
                 } else if (intent instanceof InputIntent.Cancel) {
                     return new UpdateResult<>(model, List.of(new Cmd.ReturnToStart()));
@@ -78,7 +81,7 @@ public class DiagnosticsPage implements Program<DiagnosticsPage.Model, Diagnosti
                 // Inside a test
                 if (intent instanceof InputIntent.Cancel || intent instanceof InputIntent.Submit) {
                     return new UpdateResult<>(new Model(State.MENU, model.selectedIndex()),
-                            List.of(new Cmd.PlaySound("/assets/audio/type_in.mp3")));
+                            List.of(new Cmd.PlaySound(SFX_TYPE_IN)));
                 }
             }
         }

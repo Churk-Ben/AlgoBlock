@@ -22,6 +22,9 @@ public class AppProgram implements Program<AppModel, AppMsg, AppCmd> {
     private final Level initialLevel;
     private final Map<Integer, Level> levelById;
 
+    private static final String SFX_ACCEPT = "/assets/audio/sfx/accept.mp3";
+    private static final String SFX_WRONG_ANSWER = "/assets/audio/sfx/wrong-answer.mp3";
+
     public AppProgram(StartPage startPage, GamePage gamePage, DiagnosticsPage diagnosticsPage, List<Level> levels) {
         if (levels == null || levels.isEmpty()) {
             throw new IllegalArgumentException("levels must not be empty");
@@ -93,12 +96,16 @@ public class AppProgram implements Program<AppModel, AppMsg, AppCmd> {
                 GamePage.Model nextGameModel = result.model();
                 Level nextCurrentLevel = model.currentLevel();
 
-                if (msg instanceof AppMsg.SubmitFinished sf && sf.result().accepted()) {
-                    commands.add(new AppCmd.PlaySound("/assets/audio/accept.mp3"));
-                    Level nextLevel = levelById.get(model.currentLevel().id() + 1);
-                    if (nextLevel != null) {
-                        nextCurrentLevel = nextLevel;
-                        nextGameModel = GamePage.Model.init(nextLevel, System.currentTimeMillis() / 1000);
+                if (msg instanceof AppMsg.SubmitFinished sf) {
+                    if (sf.result().accepted()) {
+                        commands.add(new AppCmd.PlaySound(SFX_ACCEPT));
+                        Level nextLevel = levelById.get(model.currentLevel().id() + 1);
+                        if (nextLevel != null) {
+                            nextCurrentLevel = nextLevel;
+                            nextGameModel = GamePage.Model.init(nextLevel, System.currentTimeMillis() / 1000);
+                        }
+                    } else {
+                        commands.add(new AppCmd.PlaySound(SFX_WRONG_ANSWER));
                     }
                 }
 

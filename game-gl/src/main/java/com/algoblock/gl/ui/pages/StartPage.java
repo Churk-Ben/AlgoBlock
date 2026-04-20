@@ -24,6 +24,9 @@ public class StartPage implements Program<StartPage.Model, StartPage.Msg, StartP
 
     private static final String[] OPTIONS = { "Start Game", "Diagnostics", "Exit Game" };
 
+    private static final String SFX_TYPE_IN = "/assets/audio/sfx/type-in.mp3";
+    private static final String SFX_INTERACT = "/assets/audio/sfx/interact.mp3";
+
     public record Model(int selectedIndex) {
         public static Model init() {
             return new Model(0);
@@ -62,20 +65,20 @@ public class StartPage implements Program<StartPage.Model, StartPage.Msg, StartP
                 int next = model.selectedIndex() - 1;
                 if (next < 0)
                     next = OPTIONS.length - 1;
-                return new UpdateResult<>(new Model(next), List.of());
+                return new UpdateResult<>(new Model(next), List.of(new Cmd.PlaySound(SFX_INTERACT)));
             } else if (intent instanceof InputIntent.NavigateNext) {
                 int next = (model.selectedIndex() + 1) % OPTIONS.length;
-                return new UpdateResult<>(new Model(next), List.of());
+                return new UpdateResult<>(new Model(next), List.of(new Cmd.PlaySound(SFX_INTERACT)));
             } else if (intent instanceof InputIntent.Submit) {
                 if (model.selectedIndex() == 0) {
                     return new UpdateResult<>(model,
-                            List.of(new Cmd.StartGame(), new Cmd.PlaySound("/assets/audio/type_in.mp3")));
+                            List.of(new Cmd.StartGame(), new Cmd.PlaySound(SFX_TYPE_IN)));
                 } else if (model.selectedIndex() == 1) {
                     return new UpdateResult<>(model,
-                            List.of(new Cmd.OpenDiagnostics(), new Cmd.PlaySound("/assets/audio/type_in.mp3")));
+                            List.of(new Cmd.OpenDiagnostics(), new Cmd.PlaySound(SFX_TYPE_IN)));
                 } else {
                     return new UpdateResult<>(model,
-                            List.of(new Cmd.Exit(), new Cmd.PlaySound("/assets/audio/type_in.mp3")));
+                            List.of(new Cmd.Exit(), new Cmd.PlaySound(SFX_TYPE_IN)));
                 }
             }
         }
