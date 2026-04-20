@@ -93,14 +93,14 @@ public class GamePage implements Program<GamePage.Model, GamePage.Msg, GamePage.
 
     @Override
     public UpdateResult<Model, Cmd> update(Model model, Msg msg) {
-        if (msg instanceof Msg.SubmitFinished submitFinished) {
-            Model next = new Model(model.level(), model.line(), model.cursorIndex(), submitFinished.result(),
+        if (msg instanceof Msg.SubmitFinished(SubmissionResult result)) {
+            Model next = new Model(model.level(), model.line(), model.cursorIndex(), result,
                     model.startEpochSeconds(), model.cursorSolidUntilMillis(), model.completerModel(), model.paused(),
                     model.pauseSelectedIndex());
             return new UpdateResult<>(next, List.of());
         }
 
-        if (msg instanceof Msg.Intent intentMsg && intentMsg.intent() instanceof InputIntent.TextTyped typed) {
+        if (msg instanceof Msg.Intent(InputIntent intent1) && intent1 instanceof InputIntent.TextTyped(char value)) {
             if (model.paused())
                 return new UpdateResult<>(model, List.of());
             // Hide completer when typing normally
@@ -109,15 +109,14 @@ public class GamePage implements Program<GamePage.Model, GamePage.Msg, GamePage.
 
             String line = model.line();
             int cursor = clampCursor(model.cursorIndex(), line.length());
-            String nextLine = line.substring(0, cursor) + typed.value() + line.substring(cursor);
+            String nextLine = line.substring(0, cursor) + value + line.substring(cursor);
             long solidUntil = System.currentTimeMillis() + CURSOR_SOLID_AFTER_EDIT_MS;
             Model next = new Model(model.level(), nextLine, cursor + 1, model.lastResult(), model.startEpochSeconds(),
                     solidUntil, completerResult.model(), model.paused(), model.pauseSelectedIndex());
             return new UpdateResult<>(next, List.of(new Cmd.PlaySound(SFX_TYPE_IN)));
         }
 
-        if (msg instanceof Msg.Intent intentMsg) {
-            InputIntent intent = intentMsg.intent();
+        if (msg instanceof Msg.Intent(InputIntent intent)) {
 
             if (model.paused()) {
                 if (intent instanceof InputIntent.Cancel) {
@@ -126,6 +125,7 @@ public class GamePage implements Program<GamePage.Model, GamePage.Msg, GamePage.
                     int next = model.pauseSelectedIndex() - 1;
                     if (next < 0)
                         next = 1;
+
                     return new UpdateResult<>(model.withPause(true, next), List.of(new Cmd.PlaySound(SFX_INTERACT)));
                 } else if (intent instanceof InputIntent.NavigateNext) {
                     int next = (model.pauseSelectedIndex() + 1) % 2;
@@ -146,14 +146,14 @@ public class GamePage implements Program<GamePage.Model, GamePage.Msg, GamePage.
                 return new UpdateResult<>(model.withPause(true, 0), List.of());
             }
 
-            if (intent instanceof InputIntent.PasteText pasted && pasted.value() != null && !pasted.value().isEmpty()) {
+            if (intent instanceof InputIntent.PasteText(String value) && value != null && !value.isEmpty()) {
                 UpdateResult<CompleterComponent.Model, Void> completerResult = CompleterComponent
                         .update(model.completerModel(), new CompleterComponent.Msg.Hide());
                 String line = model.line();
                 int cursor = clampCursor(model.cursorIndex(), line.length());
-                String nextLine = line.substring(0, cursor) + pasted.value() + line.substring(cursor);
+                String nextLine = line.substring(0, cursor) + value + line.substring(cursor);
                 long solidUntil = System.currentTimeMillis() + CURSOR_SOLID_AFTER_EDIT_MS;
-                Model next = new Model(model.level(), nextLine, cursor + pasted.value().length(), model.lastResult(),
+                Model next = new Model(model.level(), nextLine, cursor + value.length(), model.lastResult(),
                         model.startEpochSeconds(), solidUntil, completerResult.model(), model.paused(),
                         model.pauseSelectedIndex());
                 return new UpdateResult<>(next, List.of());
