@@ -13,10 +13,14 @@ public class PanelComponent {
             return;
 
         // Draw corners
-        buffer.set(x, y, '╭', fg, bg);
-        buffer.set(x + width - 1, y, '╮', fg, bg);
-        buffer.set(x, y + height - 1, '╰', fg, bg);
-        buffer.set(x + width - 1, y + height - 1, '╯', fg, bg);
+        // buffer.set(x, y, '╭', fg, bg);
+        // buffer.set(x + width - 1, y, '╮', fg, bg);
+        // buffer.set(x, y + height - 1, '╰', fg, bg);
+        // buffer.set(x + width - 1, y + height - 1, '╯', fg, bg);
+        buffer.set(x, y, '┌', fg, bg);
+        buffer.set(x + width - 1, y, '┐', fg, bg);
+        buffer.set(x, y + height - 1, '└', fg, bg);
+        buffer.set(x + width - 1, y + height - 1, '┘', fg, bg);
 
         // Draw top and bottom borders
         for (int i = 1; i < width - 1; i++) {
