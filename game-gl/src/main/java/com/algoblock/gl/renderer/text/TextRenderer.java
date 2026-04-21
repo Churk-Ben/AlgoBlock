@@ -22,6 +22,8 @@ import static org.lwjgl.opengl.GL11.glVertex2f;
 import static org.lwjgl.opengl.GL11.glViewport;
 
 import com.algoblock.gl.renderer.core.TerminalBuffer;
+import com.algoblock.gl.utils.TextUtil;
+import com.algoblock.gl.utils.Logger;
 
 public class TextRenderer {
     private final FontAtlas fontAtlas;
@@ -80,7 +82,6 @@ public class TextRenderer {
     }
 
     public float cellWidthPx() {
-        // Now cellWidth is the half-width (English character width)
         return Math.max(4f, (fontAtlas.cjkAdvancePx() * 0.5f) + 1f);
     }
 
@@ -157,7 +158,7 @@ public class TextRenderer {
                     continue;
                 }
 
-                boolean wide = isWideCodePoint(codePoint);
+                boolean wide = TextUtil.isWideCodePoint(codePoint);
                 float slotWidth = wide ? (cellWidth * 2f) : cellWidth;
                 float glyphW = glyph.bitmapWidth();
                 float glyphH = glyph.bitmapHeight();
@@ -196,19 +197,9 @@ public class TextRenderer {
             long now = System.currentTimeMillis();
             if (now - lastDiagLogMs >= 1000L) {
                 lastDiagLogMs = now;
-                System.out.printf("[TEXT-DIAG] nonSpace=%d drawn=%d skippedNoBitmap=%d%n",
+                Logger.debug("TEXT-DIAG", "nonSpace=%d drawn=%d skippedNoBitmap=%d",
                         nonSpaceCount, drawnGlyphCount, skippedNoBitmapCount);
             }
         }
-    }
-
-    private static boolean isWideCodePoint(int codePoint) {
-        return (codePoint >= 0x1100 && codePoint <= 0x115F)
-                || (codePoint >= 0x2E80 && codePoint <= 0xA4CF)
-                || (codePoint >= 0xAC00 && codePoint <= 0xD7A3)
-                || (codePoint >= 0xF900 && codePoint <= 0xFAFF)
-                || (codePoint >= 0xFE10 && codePoint <= 0xFE6F)
-                || (codePoint >= 0xFF00 && codePoint <= 0xFF60)
-                || (codePoint >= 0xFFE0 && codePoint <= 0xFFE6);
     }
 }

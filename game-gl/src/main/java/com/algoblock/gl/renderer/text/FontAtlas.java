@@ -65,7 +65,6 @@ public class FontAtlas {
     private final int textureId;
     private final int fallbackCodePoint;
     private final Map<Integer, GlyphInfo> glyphCache = new HashMap<>();
-    private int debugGlyphLogCount = 0;
     private int penX = 1;
     private int penY = 1;
     private int rowHeight = 0;
@@ -236,7 +235,6 @@ public class FontAtlas {
             if (bitmap == null) {
                 GlyphInfo info = new GlyphInfo(codePoint, 0f, 0f, 0f, 0f, 0, 0, xOffset, yOffset, advancePx);
                 glyphCache.put(codePoint, info);
-                logGlyphDiagnostic(codePoint, 0, 0, xOffset, yOffset, advancePx, false, 0);
                 return info;
             }
             glyphW = Math.max(0, bw.get(0));
@@ -248,7 +246,6 @@ public class FontAtlas {
             stbtt_FreeBitmap(bitmap, 0L);
             GlyphInfo info = new GlyphInfo(codePoint, 0f, 0f, 0f, 0f, 0, 0, xOffset, yOffset, advancePx);
             glyphCache.put(codePoint, info);
-            logGlyphDiagnostic(codePoint, glyphW, glyphH, xOffset, yOffset, advancePx, false, 0);
             return info;
         }
 
@@ -259,10 +256,8 @@ public class FontAtlas {
         rowHeight = Math.max(rowHeight, glyphH + 1);
 
         ByteBuffer rgba = BufferUtils.createByteBuffer(glyphW * glyphH * 4);
-        int alphaMax = 0;
         for (int i = 0; i < glyphW * glyphH; i++) {
             int alpha = bitmap.get(i) & 0xFF;
-            alphaMax = Math.max(alphaMax, alpha);
             rgba.put((byte) 0xFF);
             rgba.put((byte) 0xFF);
             rgba.put((byte) 0xFF);
@@ -282,16 +277,7 @@ public class FontAtlas {
         float v1 = (y + glyphH) / (float) atlasHeight;
         GlyphInfo info = new GlyphInfo(codePoint, u0, v0, u1, v1, glyphW, glyphH, xOffset, yOffset, advancePx);
         glyphCache.put(codePoint, info);
-        logGlyphDiagnostic(codePoint, glyphW, glyphH, xOffset, yOffset, advancePx, true, alphaMax);
         return info;
-    }
-
-    private void logGlyphDiagnostic(int codePoint, int w, int h, int xOffset, int yOffset, float advancePx,
-            boolean hasBitmap, int alphaMax) {
-        if (debugGlyphLogCount >= 80) {
-            return;
-        }
-        debugGlyphLogCount++;
     }
 
     private void placeGlyph(int glyphW, int glyphH, int codePoint) {
