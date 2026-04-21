@@ -12,10 +12,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_UP;
 
 import java.util.Optional;
 
-public class KeyMapper {
-    private KeyMapper() {
-    }
-
+public final class KeyMapper {
     public static Optional<InputKey> toInputKey(int glfwKey) {
         InputKey mapped = switch (glfwKey) {
             case GLFW_KEY_ENTER -> InputKey.SUBMIT;

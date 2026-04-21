@@ -13,24 +13,14 @@ import java.util.List;
 public final class InputIntentMapper {
     private static final long NAV_INTENT_TTL_MS = 160L;
 
-    private InputIntentMapper() {
-    }
-
     public static List<IntentEnvelope> map(InputEvent event, long nowMillis) {
         List<IntentEnvelope> intents = new ArrayList<>();
 
-        if (event instanceof CharEvent c) {
-            intents.add(persistent(new InputIntent.TextTyped(c.value()), nowMillis));
-        } else if (event instanceof PasteEvent p) {
-            intents.add(persistent(new InputIntent.PasteText(p.value()), nowMillis));
-        } else if (event instanceof WheelEvent w) {
-            if (w.yoffset() > 0) {
-                intents.add(nav(new InputIntent.NavigatePrev(), nowMillis));
-            } else if (w.yoffset() < 0) {
-                intents.add(nav(new InputIntent.NavigateNext(), nowMillis));
-            }
-        } else if (event instanceof KeyEvent k) {
-            InputKey key = k.key();
+        if (event instanceof CharEvent(char value)) {
+            intents.add(persistent(new InputIntent.TextTyped(value), nowMillis));
+        } else if (event instanceof PasteEvent(String value)) {
+            intents.add(persistent(new InputIntent.PasteText(value), nowMillis));
+        } else if (event instanceof KeyEvent(InputKey key)) {
             switch (key) {
                 case NAV_UP -> intents.add(nav(new InputIntent.NavigatePrev(), nowMillis));
                 case NAV_DOWN -> intents.add(nav(new InputIntent.NavigateNext(), nowMillis));
@@ -43,6 +33,17 @@ public final class InputIntentMapper {
                 case TAB -> intents.add(persistent(new InputIntent.Tab(), nowMillis));
                 default -> {
                 }
+            }
+        } else if (event instanceof WheelEvent(double xoffset, double yoffset)) {
+            // 鼠标没有副滚轮, 暂时先这么处理吧
+            if (yoffset > 0) {
+                intents.add(nav(new InputIntent.NavigatePrev(), nowMillis));
+            } else if (yoffset < 0) {
+                intents.add(nav(new InputIntent.NavigateNext(), nowMillis));
+            } else if (xoffset > 0) {
+                intents.add(nav(new InputIntent.MoveCursorRight(), nowMillis));
+            } else if (xoffset < 0) {
+                intents.add(nav(new InputIntent.MoveCursorLeft(), nowMillis));
             }
         }
 
