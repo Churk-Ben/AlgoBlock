@@ -1,6 +1,7 @@
 package com.algoblock.gl.renderer.core;
 
 import java.util.Arrays;
+import com.algoblock.gl.utils.TextUtil;
 
 public class TerminalBuffer {
     public record Cell(char c, int fg, int bg) {
@@ -38,21 +39,11 @@ public class TerminalBuffer {
             char c = text.charAt(i);
             set(cursor, row, c, fg, bg);
             cursor++;
-            if (isWideCodePoint(c)) {
+            if (TextUtil.isWideCodePoint(c)) {
                 set(cursor, row, '\0', fg, bg);
                 cursor++;
             }
         }
-    }
-
-    private static boolean isWideCodePoint(int codePoint) {
-        return (codePoint >= 0x1100 && codePoint <= 0x115F)
-                || (codePoint >= 0x2E80 && codePoint <= 0xA4CF)
-                || (codePoint >= 0xAC00 && codePoint <= 0xD7A3)
-                || (codePoint >= 0xF900 && codePoint <= 0xFAFF)
-                || (codePoint >= 0xFE10 && codePoint <= 0xFE6F)
-                || (codePoint >= 0xFF00 && codePoint <= 0xFF60)
-                || (codePoint >= 0xFFE0 && codePoint <= 0xFFE6);
     }
 
     public synchronized void clear() {

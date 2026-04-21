@@ -1,23 +1,7 @@
 package com.algoblock.gl;
 
-import static org.lwjgl.glfw.GLFW.GLFW_RESIZABLE;
-import static org.lwjgl.glfw.GLFW.GLFW_TRUE;
-import static org.lwjgl.glfw.GLFW.glfwCreateWindow;
-import static org.lwjgl.glfw.GLFW.glfwDefaultWindowHints;
-import static org.lwjgl.glfw.GLFW.glfwDestroyWindow;
-import static org.lwjgl.glfw.GLFW.glfwGetTime;
-import static org.lwjgl.glfw.GLFW.glfwGetFramebufferSize;
-import static org.lwjgl.glfw.GLFW.glfwInit;
-import static org.lwjgl.glfw.GLFW.glfwMakeContextCurrent;
-import static org.lwjgl.glfw.GLFW.glfwSetWindowTitle;
-import static org.lwjgl.glfw.GLFW.glfwSwapBuffers;
-import static org.lwjgl.glfw.GLFW.glfwSwapInterval;
-import static org.lwjgl.glfw.GLFW.glfwTerminate;
-import static org.lwjgl.glfw.GLFW.glfwWindowHint;
-import static org.lwjgl.glfw.GLFW.glfwWindowShouldClose;
-import static org.lwjgl.opengl.GL11.GL_COLOR_BUFFER_BIT;
-import static org.lwjgl.opengl.GL11.glClear;
-import static org.lwjgl.opengl.GL11.glClearColor;
+import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.opengl.GL11.*;
 
 import com.algoblock.core.engine.BlockRegistry;
 import com.algoblock.core.engine.GameCoreService;
@@ -66,8 +50,16 @@ public class Main {
             throw new IllegalStateException("Failed to create window");
         }
 
+        glfwSetWindowSizeLimits(
+                window,
+                960,
+                540,
+                GLFW_DONT_CARE,
+                GLFW_DONT_CARE);
+
         AtomicInteger fbWidth = new AtomicInteger(1280);
         AtomicInteger fbHeight = new AtomicInteger(720);
+
         // Read initial size
         try (MemoryStack stack = MemoryStack.stackPush()) {
             var w = stack.mallocInt(1);
@@ -77,7 +69,7 @@ public class Main {
             fbHeight.set(h.get(0));
         }
 
-        org.lwjgl.glfw.GLFW.glfwSetFramebufferSizeCallback(window, (w, width, height) -> {
+        glfwSetFramebufferSizeCallback(window, (w, width, height) -> {
             fbWidth.set(width);
             fbHeight.set(height);
         });
@@ -171,7 +163,7 @@ public class Main {
         renderThread.start();
 
         while (!glfwWindowShouldClose(window)) {
-            org.lwjgl.glfw.GLFW.glfwWaitEventsTimeout(0.1);
+            glfwWaitEventsTimeout(0.1);
             glfwSetWindowTitle(window, "AlgoBlock");
         }
 
