@@ -6,6 +6,7 @@ import com.algoblock.gl.input.intent.InputIntent;
 import com.algoblock.gl.renderer.core.RenderFrame;
 import com.algoblock.gl.renderer.core.TerminalBuffer;
 import com.algoblock.gl.renderer.effect.UiEffect;
+import com.algoblock.gl.renderer.cursor.CursorState;
 import com.algoblock.gl.services.CompletionService;
 import com.algoblock.gl.ui.SyntaxHighlighter;
 import com.algoblock.gl.ui.components.CompleterComponent;
@@ -271,7 +272,7 @@ public class GamePage implements Program<GamePage.Model, GamePage.Msg, GamePage.
         if (cols < 8 || rows < 8) {
             int fallbackCol = Math.min(cols - 1, Math.max(0, 2 + visualOffset(model.line(), model.cursorIndex())));
             int fallbackRow = Math.min(rows - 1, 0);
-            return new RenderFrame(buffer, fallbackCol, fallbackRow, true, true, CURSOR_COLOR,
+            return new RenderFrame(buffer, new CursorState(fallbackCol, fallbackRow, true, true, CURSOR_COLOR),
                     List.of(new UiEffect.Crt(0.30f)));
         }
 
@@ -360,7 +361,8 @@ public class GamePage implements Program<GamePage.Model, GamePage.Msg, GamePage.
 
         effects.add(new UiEffect.Crt(0.30f));
 
-        return new RenderFrame(buffer, cursorCol, cursorRow, blinkVisible, true, CURSOR_COLOR, effects);
+        return new RenderFrame(buffer, new CursorState(cursorCol, cursorRow, blinkVisible, true, CURSOR_COLOR),
+                effects);
     }
 
     private void drawTopPanel(Model model, TerminalBuffer buffer, int x, int y, int width, int height) {

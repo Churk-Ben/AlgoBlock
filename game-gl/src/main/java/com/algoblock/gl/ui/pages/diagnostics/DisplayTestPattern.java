@@ -2,6 +2,7 @@ package com.algoblock.gl.ui.pages.diagnostics;
 
 import com.algoblock.gl.renderer.core.RenderFrame;
 import com.algoblock.gl.renderer.core.TerminalBuffer;
+import com.algoblock.gl.renderer.cursor.CursorState;
 
 public class DisplayTestPattern {
     private static final double CHECKERBOARD_VARIANT_SECONDS = 1.0;
@@ -82,7 +83,8 @@ public class DisplayTestPattern {
             cursorRow = rows - 2;
         }
 
-        return new RenderFrame(buffer, cursorCol, cursorRow, true, true, 0x22CC22, java.util.List.of());
+        return new RenderFrame(buffer, new CursorState(cursorCol, cursorRow, true, true, 0x22CC22),
+                java.util.List.of());
     }
 
     private static double normalize(double t) {

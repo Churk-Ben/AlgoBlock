@@ -1,14 +1,14 @@
 package com.algoblock.gl.input.intent;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.algoblock.gl.input.InputKey;
 import com.algoblock.gl.input.event.CharEvent;
 import com.algoblock.gl.input.event.InputEvent;
 import com.algoblock.gl.input.event.KeyEvent;
 import com.algoblock.gl.input.event.PasteEvent;
 import com.algoblock.gl.input.event.WheelEvent;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public final class InputIntentMapper {
     private static final long NAV_INTENT_TTL_MS = 160L;

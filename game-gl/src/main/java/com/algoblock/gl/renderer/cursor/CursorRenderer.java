@@ -10,6 +10,9 @@ import com.algoblock.gl.renderer.core.RenderFrame;
 import com.algoblock.gl.renderer.text.TextRenderer;
 
 public class CursorRenderer {
+    private static final String CURSOR_SHADER_VERTEX = "/assets/shaders/cursor_vert.glsl";
+    private static final String CURSOR_SHADER_FRAGMENT = "/assets/shaders/cursor_frag.glsl";
+
     private int shaderProgram = 0;
     private int uStartLoc;
     private int uEndLoc;
@@ -26,11 +29,11 @@ public class CursorRenderer {
             return;
 
         int vert = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vert, loadShaderSource("/assets/shaders/cursor_vert.glsl"));
+        glShaderSource(vert, loadShaderSource(CURSOR_SHADER_VERTEX));
         glCompileShader(vert);
 
         int frag = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(frag, loadShaderSource("/assets/shaders/cursor_frag.glsl"));
+        glShaderSource(frag, loadShaderSource(CURSOR_SHADER_FRAGMENT));
         glCompileShader(frag);
 
         shaderProgram = glCreateProgram();
@@ -47,9 +50,8 @@ public class CursorRenderer {
 
     private String loadShaderSource(String resourcePath) {
         try (InputStream in = getClass().getResourceAsStream(resourcePath)) {
-            if (in == null) {
+            if (in == null)
                 throw new RuntimeException("Shader resource not found: " + resourcePath);
-            }
             return new String(in.readAllBytes(), StandardCharsets.UTF_8);
         } catch (Exception e) {
             throw new RuntimeException("Failed to load shader: " + resourcePath, e);
@@ -57,7 +59,7 @@ public class CursorRenderer {
     }
 
     public void draw(RenderFrame frame, TextRenderer textRenderer, double timeSeconds) {
-        if (frame == null || !frame.cursorVisible()) {
+        if (frame == null || !frame.cursorState().visible()) {
             lastTimeSeconds = timeSeconds;
             return;
         }
@@ -77,8 +79,8 @@ public class CursorRenderer {
         int rows = frame.textBuffer() != null ? frame.textBuffer().rows() : 0;
         float marginX = textRenderer.gridOffsetXPx(cols);
         float marginY = textRenderer.gridOffsetYPx(rows);
-        float targetX = marginX + frame.cursorCol() * cellWidth + cellWidth * 0.5f;
-        float targetY = marginY + frame.cursorRow() * cellHeight + cellHeight * 0.5f;
+        float targetX = marginX + frame.cursorState().col() * cellWidth + cellWidth * 0.5f;
+        float targetY = marginY + frame.cursorState().row() * cellHeight + cellHeight * 0.5f;
 
         if (animatedX < 0) {
             animatedX = targetX;
@@ -94,11 +96,11 @@ public class CursorRenderer {
         animatedX += (targetX - animatedX) * t;
         animatedY += (targetY - animatedY) * t;
 
-        int color = frame.cursorColor();
+        int color = frame.cursorState().color();
         float r = ((color >> 16) & 0xFF) / 255f;
         float g = ((color >> 8) & 0xFF) / 255f;
         float b = (color & 0xFF) / 255f;
-        float a = frame.cursorBlockStyle() ? 0.45f : 0.9f;
+        float a = frame.cursorState().blockStyle() ? 0.45f : 0.9f;
 
         float minX = Math.min(animatedX, targetX) - cellWidth * 2;
         float maxX = Math.max(animatedX, targetX) + cellWidth * 2;
@@ -109,11 +111,11 @@ public class CursorRenderer {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         glUseProgram(shaderProgram);
-        glUniform2f(uStartLoc, targetX, targetY); // head (target position)
-        glUniform2f(uEndLoc, animatedX, animatedY); // tail (animated position)
+        glUniform2f(uStartLoc, targetX, targetY);
+        glUniform2f(uEndLoc, animatedX, animatedY);
         glUniform2f(uSizeLoc, cellWidth, cellHeight);
         glUniform4f(uColorLoc, r, g, b, a);
-        glUniform1i(uBlockStyleLoc, frame.cursorBlockStyle() ? 1 : 0);
+        glUniform1i(uBlockStyleLoc, frame.cursorState().blockStyle() ? 1 : 0);
 
         glBegin(GL_QUADS);
         glTexCoord2f(minX, minY);

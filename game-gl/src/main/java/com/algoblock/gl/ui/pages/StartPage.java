@@ -9,6 +9,7 @@ import com.algoblock.gl.renderer.core.RenderFrame;
 import com.algoblock.gl.renderer.core.TerminalBuffer;
 import com.algoblock.gl.renderer.effect.GlitchState;
 import com.algoblock.gl.renderer.effect.UiEffect;
+import com.algoblock.gl.renderer.cursor.CursorState;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -128,7 +129,8 @@ public class StartPage implements Program<StartPage.Model, StartPage.Msg, StartP
             effects.add(new UiEffect.Glitch(glitch));
         }
 
-        return new RenderFrame(buffer, cursorCol, cursorRow, true, true, 0x22CC22, List.copyOf(effects));
+        return new RenderFrame(buffer, new CursorState(cursorCol, cursorRow, true, true, 0x22CC22),
+                List.copyOf(effects));
     }
 
     private static final String[] TITLE_RESOURCES = {

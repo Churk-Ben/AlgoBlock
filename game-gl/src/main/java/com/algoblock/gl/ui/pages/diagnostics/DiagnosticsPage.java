@@ -6,6 +6,7 @@ import com.algoblock.gl.renderer.core.TerminalBuffer;
 import com.algoblock.gl.renderer.effect.GlitchState;
 
 import com.algoblock.gl.renderer.effect.UiEffect;
+import com.algoblock.gl.renderer.cursor.CursorState;
 import com.algoblock.gl.ui.components.CMatrixComponent;
 import com.algoblock.gl.ui.effect.GlitchEffect;
 import com.algoblock.gl.ui.tea.Program;
@@ -100,7 +101,7 @@ public class DiagnosticsPage implements Program<DiagnosticsPage.Model, Diagnosti
             return displayTest.renderTo(buffer, nowMillis / 1000.0);
         } else if (model.state() == State.FONT_DIAGNOSTIC) {
             fontDiag.renderTo(buffer, nowMillis / 1000.0);
-            return new RenderFrame(buffer, -1, -1, false, false, 0, List.of());
+            return new RenderFrame(buffer, new CursorState(-1, -1, false, false, 0), List.of());
         }
 
         // Render MENU
@@ -138,6 +139,7 @@ public class DiagnosticsPage implements Program<DiagnosticsPage.Model, Diagnosti
             effects.add(new UiEffect.Glitch(glitch));
         }
 
-        return new RenderFrame(buffer, cursorCol, cursorRow, true, true, 0x22CC22, effects);
+        return new RenderFrame(buffer, new CursorState(cursorCol, cursorRow, true, true, 0x22CC22),
+                effects);
     }
 }
