@@ -5,27 +5,31 @@ import com.algoblock.gl.renderer.core.TerminalBuffer;
 import com.algoblock.gl.renderer.cursor.CursorState;
 
 public class DisplayTestPattern {
+    // 棋盘测试测试
     private static final double CHECKERBOARD_VARIANT_SECONDS = 1.0;
     private static final int CHECKERBOARD_VARIANTS = 4;
-    private static final double CHECKERBOARD_SECONDS = CHECKERBOARD_VARIANT_SECONDS * CHECKERBOARD_VARIANTS;
-    private static final double FULL_RED_SECONDS = 1.5;
-    private static final double FULL_GREEN_SECONDS = 1.5;
-    private static final double FULL_BLUE_SECONDS = 1.5;
-    private static final double ROLLING_SECONDS = 8.0;
-    private static final double TOTAL_SECONDS = CHECKERBOARD_SECONDS +
-            FULL_RED_SECONDS +
-            FULL_GREEN_SECONDS +
-            FULL_BLUE_SECONDS +
-            ROLLING_SECONDS;
 
-    private static final int BG_DARK_A = 0x0D1117; // 游戏窗口背景颜色
-    private static final int BG_DARK_B = 0x555555; // 灰度色01
+    // 全屏颜色测试
+    private static final double FULL_RED_SECONDS = 1.0;
+    private static final double FULL_GREEN_SECONDS = 1.0;
+    private static final double FULL_BLUE_SECONDS = 1.0;
+
+    // 游标跳转测试
+    private static final double ROLLING_SECONDS = 4.0;
+
+    // 总测试时间
+    private static final double CHECKERBOARD_SECONDS = CHECKERBOARD_VARIANT_SECONDS * CHECKERBOARD_VARIANTS;
+    private static final double TOTAL_SECONDS = CHECKERBOARD_SECONDS + FULL_RED_SECONDS +
+            FULL_GREEN_SECONDS + FULL_BLUE_SECONDS + ROLLING_SECONDS;
+
+    private static final int BG_IDLE = 0x0D1117; // 背景色
+    private static final int GREY_A = 0x555555; // 灰度色01
+    private static final int GREY_B = 0x888888; // 灰度色02
+    private static final int GREY_C = 0xFFFFFF; // 文本颜色
     private static final int BG_RED = 0xFF0000; // 红色
     private static final int BG_GREEN = 0x00FF00; // 绿色
     private static final int BG_BLUE = 0x0000FF; // 蓝色
-    private static final int BG_IDLE = 0x0D1117; // 游戏窗口背景颜色
-    private static final int FG_BRIGHT = 0xFFFFFF; // 文本颜色
-    private static final int FG_DARK = 0x888888; // 灰度色02
+    private static final int CURSOR = 0x22CC22; // 游标颜色
 
     private double startTime = -1.0;
 
@@ -48,16 +52,20 @@ public class DisplayTestPattern {
             return null;
         }
         t -= CHECKERBOARD_SECONDS;
+
+        // Full screen color test
         if (t < FULL_RED_SECONDS) {
             fill(buffer, cols, rows, BG_RED);
             return null;
         }
         t -= FULL_RED_SECONDS;
+
         if (t < FULL_GREEN_SECONDS) {
             fill(buffer, cols, rows, BG_GREEN);
             return null;
         }
         t -= FULL_GREEN_SECONDS;
+
         if (t < FULL_BLUE_SECONDS) {
             fill(buffer, cols, rows, BG_BLUE);
             return null;
@@ -66,25 +74,31 @@ public class DisplayTestPattern {
 
         // Cursor jump test
         fill(buffer, cols, rows, BG_IDLE);
-        int cursorCol = 0;
-        int cursorRow = 0;
+        int col = 0;
+        int row = 0;
         int phase = (int) (t * 2.0) % 4;
-        if (phase == 0) {
-            cursorCol = 1;
-            cursorRow = 1;
-        } else if (phase == 1) {
-            cursorCol = cols - 2;
-            cursorRow = 1;
-        } else if (phase == 2) {
-            cursorCol = 1;
-            cursorRow = rows - 2;
-        } else {
-            cursorCol = cols - 2;
-            cursorRow = rows - 2;
+
+        switch (phase) {
+            case 0:
+                col = 4;
+                row = 4;
+                break;
+            case 1:
+                col = cols - 5;
+                row = 4;
+                break;
+            case 2:
+                col = 4;
+                row = rows - 5;
+                break;
+            default:
+                col = cols - 5;
+                row = rows - 5;
+                break;
         }
 
-        return new RenderFrame(buffer, new CursorState(cursorCol, cursorRow, true, true, 0x22CC22),
-                java.util.List.of());
+        CursorState cursor = new CursorState(col, row, true, true, CURSOR);
+        return new RenderFrame(buffer, cursor, null);
     }
 
     private static double normalize(double t) {
@@ -104,8 +118,8 @@ public class DisplayTestPattern {
                 if (inverted) {
                     evenCell = !evenCell;
                 }
-                int bg = evenCell ? BG_DARK_A : BG_DARK_B;
-                int fg = evenCell ? FG_BRIGHT : FG_DARK;
+                int bg = evenCell ? BG_IDLE : GREY_A;
+                int fg = GREY_C;
 
                 boolean firstHalf = (col & 1) == 0;
                 char c;
@@ -122,7 +136,7 @@ public class DisplayTestPattern {
     private static void fill(TerminalBuffer buffer, int cols, int rows, int bg) {
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
-                buffer.set(col, row, ' ', 0xFFFFFF, bg);
+                buffer.set(col, row, ' ', GREY_B, bg); // 其实这个颜色没有用...
             }
         }
     }
