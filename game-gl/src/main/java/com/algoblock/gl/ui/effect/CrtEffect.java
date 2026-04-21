@@ -1,32 +1,19 @@
 package com.algoblock.gl.ui.effect;
 
-import static org.lwjgl.opengl.GL11.GL_BLEND;
-import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11.GL_QUADS;
-import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11.glBegin;
-import static org.lwjgl.opengl.GL11.glBlendFunc;
-import static org.lwjgl.opengl.GL11.glColor4f;
-import static org.lwjgl.opengl.GL11.glDisable;
-import static org.lwjgl.opengl.GL11.glEnable;
-import static org.lwjgl.opengl.GL11.glEnd;
-import static org.lwjgl.opengl.GL11.glVertex2f;
+import static org.lwjgl.opengl.GL11.*;
 
-import com.algoblock.gl.renderer.effect.UiEffect;
-import com.algoblock.gl.renderer.effect.UiEffectRenderContext;
-import com.algoblock.gl.renderer.effect.UiEffectRenderer;
+import com.algoblock.gl.renderer.effect.*;
 
 public class CrtEffect implements UiEffectRenderer<UiEffect.Crt> {
-
     // 扫描线参数
     private final float scanSpeed = 20.0f;
     private final float scanFrequency = 0.1f;
     private final float scanStripeStep = 2.0f;
     private final float scanGlowThreshold = 0.7f;
-    private final float scanGlowAlphaMult = 0.15f;
+    private final float scanGlowAlphaMult = 0.20f;
     private final float scanDarkAlphaMult = 0.25f;
 
-    // 暗角(Vignette)参数
+    // 暗角参数
     private final double vignetteAnimFreq = 1.7;
     private final float vignetteBaseAlpha = 0.03f;
     private final float vignetteStrengthMult = 0.16f;

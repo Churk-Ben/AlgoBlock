@@ -1,23 +1,13 @@
 package com.algoblock.gl.ui.effect;
 
-import static org.lwjgl.opengl.GL11.GL_BLEND;
-import static org.lwjgl.opengl.GL11.GL_ONE_MINUS_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11.GL_QUADS;
-import static org.lwjgl.opengl.GL11.GL_SRC_ALPHA;
-import static org.lwjgl.opengl.GL11.glBegin;
-import static org.lwjgl.opengl.GL11.glBlendFunc;
-import static org.lwjgl.opengl.GL11.glColor4f;
-import static org.lwjgl.opengl.GL11.glDisable;
-import static org.lwjgl.opengl.GL11.glEnable;
-import static org.lwjgl.opengl.GL11.glEnd;
-import static org.lwjgl.opengl.GL11.glVertex2f;
+import static org.lwjgl.opengl.GL11.*;
 
-import com.algoblock.gl.renderer.effect.UiEffect;
-import com.algoblock.gl.renderer.effect.UiEffectRenderContext;
-import com.algoblock.gl.renderer.effect.UiEffectRenderer;
+import com.algoblock.gl.renderer.effect.*;
 import com.algoblock.gl.renderer.text.TextRenderer;
 
 public class DimEffect implements UiEffectRenderer<UiEffect.Dim> {
+    // 此特效还需要思考一下
+
     @Override
     public Class<UiEffect.Dim> effectType() {
         return UiEffect.Dim.class;

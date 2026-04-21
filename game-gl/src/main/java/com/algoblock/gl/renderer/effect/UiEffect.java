@@ -12,12 +12,18 @@ public sealed interface UiEffect permits UiEffect.Crt, UiEffect.Glitch, UiEffect
         }
     }
 
-    record Glitch(com.algoblock.gl.ui.effect.GlitchState state) implements UiEffect {
+    record Glitch(float y1, float h1, float offset1, float y2, float h2, float offset2) implements UiEffect {
         @Override
         public Glitch merge(UiEffect other) {
             if (!(other instanceof Glitch g))
                 return this;
-            return this.state == null ? g : this;
+
+            if (this.y1 == 0f && this.h1 == 0f && this.offset1 == 0f &&
+                    this.y2 == 0f && this.h2 == 0f && this.offset2 == 0f) {
+                return g;
+            } else {
+                return this;
+            }
         }
     }
 

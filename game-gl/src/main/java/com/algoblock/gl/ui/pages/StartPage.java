@@ -7,7 +7,6 @@ import com.algoblock.gl.ui.tea.Program;
 import com.algoblock.gl.ui.tea.UpdateResult;
 import com.algoblock.gl.renderer.core.RenderFrame;
 import com.algoblock.gl.renderer.core.TerminalBuffer;
-import com.algoblock.gl.ui.effect.GlitchState;
 import com.algoblock.gl.renderer.effect.UiEffect;
 import com.algoblock.gl.renderer.cursor.CursorState;
 
@@ -122,11 +121,11 @@ public class StartPage implements Program<StartPage.Model, StartPage.Msg, StartP
         int cursorCol = cursorInfo[0];
         int cursorRow = cursorInfo[1];
 
-        GlitchState glitch = glitchEffect.update(nowMillis);
+        UiEffect.Glitch glitch = glitchEffect.update(nowMillis);
         List<UiEffect> effects = new java.util.ArrayList<>();
         effects.add(new UiEffect.Crt(0.3f));
         if (glitch != null) {
-            effects.add(new UiEffect.Glitch(glitch));
+            effects.add(glitch);
         }
 
         return new RenderFrame(buffer, new CursorState(cursorCol, cursorRow, true, true, 0x22CC22),
