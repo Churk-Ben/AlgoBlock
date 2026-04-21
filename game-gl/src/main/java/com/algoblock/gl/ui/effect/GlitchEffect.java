@@ -1,6 +1,5 @@
 package com.algoblock.gl.ui.effect;
 
-import com.algoblock.gl.renderer.effect.GlitchState;
 import com.algoblock.gl.renderer.effect.UiEffect;
 import com.algoblock.gl.renderer.effect.UiEffectRenderContext;
 import com.algoblock.gl.renderer.effect.UiEffectRenderer;

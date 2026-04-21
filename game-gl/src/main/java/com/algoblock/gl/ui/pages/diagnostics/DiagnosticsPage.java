@@ -3,7 +3,7 @@ package com.algoblock.gl.ui.pages.diagnostics;
 import com.algoblock.gl.input.intent.InputIntent;
 import com.algoblock.gl.renderer.core.RenderFrame;
 import com.algoblock.gl.renderer.core.TerminalBuffer;
-import com.algoblock.gl.renderer.effect.GlitchState;
+import com.algoblock.gl.ui.effect.GlitchState;
 
 import com.algoblock.gl.renderer.effect.UiEffect;
 import com.algoblock.gl.renderer.cursor.CursorState;

@@ -7,7 +7,7 @@ import com.algoblock.gl.ui.tea.Program;
 import com.algoblock.gl.ui.tea.UpdateResult;
 import com.algoblock.gl.renderer.core.RenderFrame;
 import com.algoblock.gl.renderer.core.TerminalBuffer;
-import com.algoblock.gl.renderer.effect.GlitchState;
+import com.algoblock.gl.ui.effect.GlitchState;
 import com.algoblock.gl.renderer.effect.UiEffect;
 import com.algoblock.gl.renderer.cursor.CursorState;
 

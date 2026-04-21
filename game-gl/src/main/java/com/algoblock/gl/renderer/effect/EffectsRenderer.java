@@ -30,31 +30,6 @@ public class EffectsRenderer {
             return;
         }
 
-        UiEffect.Crt activeCrt = null;
-        UiEffect.Dim activeDim = null;
-        UiEffect.Glitch activeGlitch = null;
-        float crtStrength = 0f;
-        float dimOpacity = 0f;
-        for (UiEffect effect : frame.effects()) {
-            if (effect instanceof UiEffect.Crt crt) {
-                crtStrength = Math.max(crtStrength, crt.strength());
-                activeCrt = new UiEffect.Crt(crtStrength);
-            } else if (effect instanceof UiEffect.Glitch glitchEffect) {
-                activeGlitch = glitchEffect;
-            } else if (effect instanceof UiEffect.Dim dimEffect) {
-                dimOpacity = Math.max(dimOpacity, dimEffect.opacity());
-                activeDim = new UiEffect.Dim(
-                        dimOpacity,
-                        dimEffect.excludeX(),
-                        dimEffect.excludeY(),
-                        dimEffect.excludeWidth(),
-                        dimEffect.excludeHeight());
-            }
-        }
-        if (activeCrt == null && activeDim == null && activeGlitch == null) {
-            return;
-        }
-
         int viewportWidth = textRenderer.viewportWidth();
         int viewportHeight = textRenderer.viewportHeight();
         glViewport(0, 0, viewportWidth, viewportHeight);
@@ -65,10 +40,25 @@ public class EffectsRenderer {
         glLoadIdentity();
 
         UiEffectRenderContext context = new UiEffectRenderContext(
-                frame, textRenderer, viewportWidth, viewportHeight, timeSeconds);
-        render(activeDim, context);
-        render(activeCrt, context);
-        render(activeGlitch, context);
+                frame,
+                textRenderer,
+                viewportWidth,
+                viewportHeight,
+                timeSeconds);
+
+        Map<Class<? extends UiEffect>, UiEffect> mergedEffects = mergeEffects(frame.effects());
+        for (UiEffect effect : mergedEffects.values()) {
+            render(effect, context);
+        }
+    }
+
+    private Map<Class<? extends UiEffect>, UiEffect> mergeEffects(Iterable<UiEffect> effects) {
+        Map<Class<? extends UiEffect>, UiEffect> merged = new HashMap<>();
+        for (UiEffect effect : effects) {
+            UiEffect existing = merged.get(effect.getClass());
+            merged.put(effect.getClass(), existing != null ? existing.merge(effect) : effect);
+        }
+        return merged;
     }
 
     private <T extends UiEffect> void register(UiEffectRenderer<T> renderer) {
