@@ -1,16 +1,18 @@
 package com.algoblock.gl.ui.pages.diagnostics;
 
 import com.algoblock.gl.renderer.core.TerminalBuffer;
+import com.algoblock.gl.renderer.cursor.CursorState;
+import com.algoblock.gl.renderer.core.RenderFrame;
 import com.algoblock.gl.utils.TextUtil;
 
 public class FontDiagnosticTestPattern {
     private static final int BG_IDLE = 0x0D1117; // 背景色
-    // private static final int GREY_A = 0x555555; // 灰度色01
+    private static final int GREY_A = 0x555555; // 灰度色01
     private static final int GREY_B = 0x888888; // 灰度色02
     private static final int GREY_C = 0xFFFFFF; // 文本颜色
     private static final int CURSOR = 0x22CC22; // 游标颜色
 
-    public void renderTo(TerminalBuffer buffer, double timeSeconds) {
+    public RenderFrame renderTo(TerminalBuffer buffer, double timeSeconds) {
         int cols = buffer.cols();
         int rows = buffer.rows();
 
@@ -26,8 +28,15 @@ public class FontDiagnosticTestPattern {
         putLine(buffer, 4, "     Symbols: <> () {} [] @#%&*!? .,:;|\\/~`", GREY_C, BG_IDLE);
         putLine(buffer, 5, "     CJK:     中文测试 汉字宽度 对齐 验证", GREY_C, BG_IDLE);
         putLine(buffer, 6, "     Mix:     A中B文C汉D字E", GREY_C, BG_IDLE);
-
         putLine(buffer, 8, "     Check stdout [FONT-DIAG] for missing glyphs.", GREY_B, BG_IDLE);
+        putLine(buffer, 9, "     Press Enter to exit...", GREY_A, BG_IDLE);
+
+        // 硬编码来的------------------------------------------- ↑ 插在这儿
+        int cursorCol = 27;
+        int cursorRow = 9;
+
+        CursorState cursor = new CursorState(cursorCol, cursorRow, true, true, CURSOR);
+        return new RenderFrame(buffer, cursor, null);
     }
 
     private void putLine(TerminalBuffer buffer, int row, String text, int fg, int bg) {
