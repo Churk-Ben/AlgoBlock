@@ -13,12 +13,14 @@ import com.algoblock.gl.ui.components.CompleterComponent;
 import com.algoblock.gl.ui.components.PanelComponent;
 import com.algoblock.gl.ui.tea.Program;
 import com.algoblock.gl.ui.tea.UpdateResult;
+import com.algoblock.gl.utils.TextUtil;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+// 这一坨, 我之后再看吧
 public class GamePage implements Program<GamePage.Model, GamePage.Msg, GamePage.Cmd> {
     private static final int BG = 0x0D1117;
     private static final int FG = 0xCDD9E5;
@@ -524,18 +526,8 @@ public class GamePage implements Program<GamePage.Model, GamePage.Msg, GamePage.
         int max = Math.max(0, Math.min(cursorIndex, line.length()));
         int width = 0;
         for (int i = 0; i < max; i++) {
-            width += isWideCodePoint(line.charAt(i)) ? 2 : 1;
+            width += TextUtil.isWideCodePoint(line.charAt(i)) ? 2 : 1;
         }
         return width;
-    }
-
-    private static boolean isWideCodePoint(int codePoint) {
-        return (codePoint >= 0x1100 && codePoint <= 0x115F)
-                || (codePoint >= 0x2E80 && codePoint <= 0xA4CF)
-                || (codePoint >= 0xAC00 && codePoint <= 0xD7A3)
-                || (codePoint >= 0xF900 && codePoint <= 0xFAFF)
-                || (codePoint >= 0xFE10 && codePoint <= 0xFE6F)
-                || (codePoint >= 0xFF00 && codePoint <= 0xFF60)
-                || (codePoint >= 0xFFE0 && codePoint <= 0xFFE6);
     }
 }
