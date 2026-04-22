@@ -28,6 +28,23 @@ public class AppCmdHandler implements CmdHandler<AppCmd, AppMsg> {
             t.setDaemon(true);
             return t;
         });
+
+        // 预热音频系统，防止首次播放音频时因懒加载(如枚举音频设备)导致的卡顿
+        this.audioExecutor.submit(() -> {
+            try {
+                javax.sound.sampled.AudioSystem.getMixerInfo();
+                Class.forName("javazoom.jl.player.Player");
+                // 尝试加载一个短音效并实例化 Player 以触发内部的类加载和 JavaSound 初始化
+                try (InputStream is = getClass().getResourceAsStream("/assets/audio/sfx/interact.mp3")) {
+                    if (is != null) {
+                        Player dummy = new Player(is);
+                        dummy.close();
+                    }
+                }
+            } catch (Throwable t) {
+                // ignore
+            }
+        });
     }
 
     @Override
