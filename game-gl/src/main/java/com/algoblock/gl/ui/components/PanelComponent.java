@@ -1,6 +1,7 @@
 package com.algoblock.gl.ui.components;
 
 import com.algoblock.gl.renderer.core.TerminalBuffer;
+import com.algoblock.gl.utils.TextUtil;
 
 public class PanelComponent {
 
@@ -45,7 +46,8 @@ public class PanelComponent {
             int fg, int bg, int titleFg) {
         drawBox(buffer, x, y, width, height, fg, bg);
         if (title != null && !title.isEmpty()) {
-            int titleX = x + (width - title.length()) / 2;
+            int titleWidth = TextUtil.getDisplayWidth(title);
+            int titleX = x + (width - titleWidth) / 2;
             buffer.print(titleX, y, title, titleFg, bg);
         }
     }
@@ -84,7 +86,7 @@ public class PanelComponent {
         // Calculate maximum option length to center the left-aligned block
         int maxOptLen = 0;
         for (String opt : options) {
-            maxOptLen = Math.max(maxOptLen, opt.length());
+            maxOptLen = Math.max(maxOptLen, TextUtil.getDisplayWidth(opt));
         }
 
         // Total width of the text block = reserved space for cursor + max text length

@@ -10,4 +10,15 @@ public final class TextUtil {
                 || (codePoint >= 0xFF00 && codePoint <= 0xFF60)
                 || (codePoint >= 0xFFE0 && codePoint <= 0xFFE6);
     }
+
+    public static int getDisplayWidth(String text) {
+        if (text == null) return 0;
+        int width = 0;
+        for (int i = 0; i < text.length(); ) {
+            int codePoint = text.codePointAt(i);
+            width += isWideCodePoint(codePoint) ? 2 : 1;
+            i += Character.charCount(codePoint);
+        }
+        return width;
+    }
 }

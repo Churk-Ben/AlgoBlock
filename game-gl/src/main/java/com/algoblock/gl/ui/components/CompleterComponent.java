@@ -2,6 +2,7 @@ package com.algoblock.gl.ui.components;
 
 import com.algoblock.gl.renderer.core.TerminalBuffer;
 import com.algoblock.gl.ui.tea.UpdateResult;
+import com.algoblock.gl.utils.TextUtil;
 
 import java.util.List;
 
@@ -73,8 +74,8 @@ public class CompleterComponent {
 
         int visibleCount = Math.max(1, Math.min(maxItems, model.items().size()));
         int longest = 0;
-        for (int i = 0; i < visibleCount; i++) {
-            longest = Math.max(longest, model.items().get(i).length());
+        for (int i = 0; i < model.items().size(); i++) {
+            longest = Math.max(longest, TextUtil.getDisplayWidth(model.items().get(i)));
         }
 
         int widthCap = Math.max(16, maxWidth);
@@ -102,7 +103,7 @@ public class CompleterComponent {
             int fg = selected ? SELECTED_FG : FG;
             int bg = selected ? SELECTED_BG : BG;
             String display = (selected ? "> " : "  ") + item;
-            if (display.length() > width - 2) {
+            if (TextUtil.getDisplayWidth(display) > width - 2) {
                 if (width - 2 >= 2) {
                     display = display.substring(0, width - 3) + "...";
                 } else {
@@ -114,11 +115,12 @@ public class CompleterComponent {
     }
 
     private static String padRight(String text, int width) {
-        if (text.length() >= width) {
+        int displayWidth = TextUtil.getDisplayWidth(text);
+        if (displayWidth >= width) {
             return text;
         }
         StringBuilder sb = new StringBuilder(text);
-        while (sb.length() < width) {
+        for (int i = 0; i < width - displayWidth; i++) {
             sb.append(' ');
         }
         return sb.toString();
