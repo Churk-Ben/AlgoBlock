@@ -1,0 +1,34 @@
+{
+  "_comment": "示例关卡：将Queue A中的数据按某种顺序转移到Stack B，使B最终从顶到底为1,3,4,2",
+  "level_id": "LVL_001",
+  "level_name": "初识搬运",
+  "struct_used": ["Queue", "Stack"],
+  "insts_allowed": [
+    {
+      "struct": "Queue",
+      "inst_id": "pop",
+      "max_uses": 6
+    },
+    {
+      "struct": "Queue",
+      "inst_id": "add",
+      "max_uses": 6
+    }
+  ],
+  "init_insts": [
+    "Queue(A,(1,2,3,4))",
+    "Stack(B)"
+  ],
+"buffer_struct":"Stack",
+"buffer_name":"B",
+"buffer_inst_in":"Stack(B).push",
+"buffer_inst_out":"Stack(B).pop",
+  "judge_insts": [
+    "Stack(B).copy(ABCDEFG_ABCDEFG_A)",
+    "Stack(ABCDEFG_ABCDEFG_B,(1,3,4,2))",
+    "Stack.equal(ABCDEFG_ABCDEFG_A,ABCDEFG_ABCDEFG_B)",
+    "Stack(ABCDEFG_ABCDEFG_A).delete",
+    "Stack(ABCDEFG_ABCDEFG_B).delete"
+  ],
+  "steps_limit": 6
+}
